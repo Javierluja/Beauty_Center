@@ -1,0 +1,93 @@
+import { z } from "zod";
+import { createRouter, adminQuery } from "./middleware";
+import { sessionPacks, sessionUsage } from "../db/schema";
+import { eq, and, sql } from "drizzle-orm";
+import { getDb } from "./queries/connection";
+
+export const sessionRouter = createRouter({
+  listAll: adminQuery.query(async () => {
+    const db = getDb();
+    return await db.select().from(sessionPacks);
+  }),
+
+  listByClient: adminQuery
+    .input(z.number())
+    .query(async ({ input }) => {
+      const db = getDb();
+      return await db
+        .select()
+        .from(sessionPacks)
+        .where(eq(sessionPacks.clientId, input));
+    }),
+
+  createPack: adminQuery
+    .input(
+      z.object({
+        clientId: z.number(),
+        serviceId: z.number(),
+        customTitle: z.string().optional(),
+        totalSessions: z.number().min(1).max(40).default(10),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = getDb();
+      return await db.insert(sessionPacks).values({
+        clientId: input.clientId,
+        serviceId: input.serviceId,
+        customTitle: input.customTitle,
+        totalSessions: input.totalSessions,
+        remainingSessions: input.totalSessions,
+        purchaseDate: new Date().toISOString().split('T')[0],
+      });
+    }),
+
+  useSession: adminQuery
+    .input(
+      z.object({
+        packId: z.number(),
+        notes: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = getDb();
+      
+      const pack = await db
+        .select()
+        .from(sessionPacks)
+        .where(eq(sessionPacks.id, input.packId))
+        .then(res => res[0]);
+
+      if (!pack || pack.remainingSessions <= 0) {
+        throw new Error("No sessions remaining");
+      }
+
+      const sessionNumber = pack.totalSessions - pack.remainingSessions + 1;
+      
+      await db.insert(sessionUsage).values({
+        packId: input.packId,
+        sessionNumber,
+        notes: input.notes,
+      });
+
+      const newRemaining = pack.remainingSessions - 1;
+      await db
+        .update(sessionPacks)
+        .set({ 
+          remainingSessions: newRemaining,
+          status: newRemaining === 0 ? "finished" : "active"
+        })
+        .where(eq(sessionPacks.id, input.packId));
+      
+      return { success: true, remaining: newRemaining };
+    }),
+
+  getUsageHistory: adminQuery
+    .input(z.number())
+    .query(async ({ input }) => {
+      const db = getDb();
+      return await db
+        .select()
+        .from(sessionUsage)
+        .where(eq(sessionUsage.packId, input));
+    }),
+});

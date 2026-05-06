@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   BEAUTY CENTER — Sistema de Diseño "Midnight Plum × Blush Rose"
+   Optimizado para MODO OSCURO — Estética Femenina Premium
+   ============================================================ */
+
+@layer base {
+  :root {
+    /* ── Modo Claro (secundario) ─────────────────────────── */
+    --background:       325 40% 97%;   /* Rosa muy suave */
+    --foreground:       270 40% 12%;   /* Ciruela oscuro */
+
+    --card:             0   0%  100%;
+    --card-foreground:  270 40% 12%;
+
+    --popover:          0   0%  100%;
+    --popover-foreground: 270 40% 12%;
+
+    --primary:          340 55% 51%;   /* Deep Rose #c0476b */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary:        325 30% 92%;   /* Blush muy suave */
+    --secondary-foreground: 270 40% 20%;
+
+    --muted:            325 25% 93%;
+    --muted-foreground: 270 15% 45%;
+
+    --accent:           340 40% 90%;
+    --accent-foreground: 340 55% 35%;
+
+    --destructive:      0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border:           325 25% 85%;
+    --input:            325 25% 85%;
+    --ring:             340 55% 51%;
+    --radius:           1rem;
+
+    /* Tarjetas admin en modo claro */
+    --admin-card:       325 40% 98%;
+    --card-elevated:    325 30% 96%;
+  }
+
+  /* ============================================================
+     MODO OSCURO PRINCIPAL — "Midnight Plum × Blush Rose"
+     ============================================================ */
+  .dark {
+    /* ── Fondos base ─────────────────────────────────────── */
+    --background:       270 25% 6%;    /* #0c0a10 — Ciruela profundo */
+    --foreground:       290 25% 94%;   /* #f0ebf5 — Blanco perla cálido */
+
+    /* ── Cards / Panels ──────────────────────────────────── */
+    --card:             270 22% 10%;   /* #161220 — Mauve oscuro */
+    --card-foreground:  290 25% 94%;
+
+    --popover:          270 22% 10%;
+    --popover-foreground: 290 25% 94%;
+
+    /* ── Acento principal: Blush Rose ────────────────────── */
+    --primary:          340 60% 68%;   /* #e0708e — Blush Rose vibrante */
+    --primary-foreground: 270 25% 6%; /* Mismo que background para contraste */
+
+    /* ── Colores de soporte ──────────────────────────────── */
+    --secondary:        270 20% 16%;   /* #1e192a — Plum elevado */
+    --secondary-foreground: 290 25% 88%;
+
+    --muted:            270 20% 14%;   /* Entre card y secondary */
+    --muted-foreground: 285 15% 62%;   /* #a090b2 — Lavanda suave */
+
+    --accent:           270 25% 18%;   /* Hover sutil */
+    --accent-foreground: 340 60% 78%;  /* Blush más claro para texto */
+
+    --destructive:      0 60% 52%;
+    --destructive-foreground: 290 25% 94%;
+
+    /* ── Bordes ──────────────────────────────────────────── */
+    --border:           270 20% 17%;   /* #231d31 — Plum border */
+    --input:            270 20% 17%;
+    --ring:             340 60% 68%;   /* Blush para focus rings */
+
+    /* ── Variables de tarjetas admin ─────────────────────── */
+    --admin-card:       270 22% 10%;   /* = card, mauve oscuro */
+    --card-elevated:    270 20% 14%;   /* Ligeramente más claro que card */
+  }
+}
+
+/* ============================================================
+   ESTILOS GLOBALES
+   ============================================================ */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Scrollbar femenino y elegante */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.4);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.7);
+  }
+
+  /* Ocultar flechas de inputs numéricos */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+/* ============================================================
+   CLASES UTILITARIAS DE DISEÑO
+   ============================================================ */
+@layer utilities {
+  /* Fondos de panel / tarjeta */
+  .bg-admin-panel {
+    background-color: hsl(var(--admin-card)) !important;
+  }
+  .bg-elevated {
+    background-color: hsl(var(--card-elevated)) !important;
+  }
+
+  /* Gradiente de acento sutil para headers */
+  .bg-primary-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(340 60% 62%) 0%,
+      hsl(300 45% 55%) 100%
+    );
+  }
+
+  /* Brillo de hover sobre cards en modo oscuro */
+  .card-hover {
+    @apply transition-all duration-200;
+  }
+  .card-hover:hover {
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3),
+                0 8px 32px hsl(var(--primary) / 0.1);
+  }
+
+  /* Texto con degradado rose/plum */
+  .text-gradient {
+    background: linear-gradient(
+      90deg,
+      hsl(340 70% 72%),
+      hsl(300 50% 68%)
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Separador sutil */
+  .divider {
+    border-color: hsl(var(--border));
+    @apply border-t;
+  }
+
+  /* Ocultar scrollbar */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
