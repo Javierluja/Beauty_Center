@@ -1,15 +1,15 @@
-import { authRouter } from "./auth-router";
-import { customerRouter } from "./customer-router";
-import { serviceRouter } from "./service-router";
-import { productRouter } from "./product-router";
-import { appointmentRouter } from "./appointment-router";
-import { saleRouter } from "./sale-router";
-import { notificationRouter } from "./notification-router";
-import { expenseRouter } from "./expense-router";
-import { sessionRouter } from "./session-router";
-import { userRouter } from "./user-router";
-import { purchaseRouter } from "./purchase-router";
-import { createRouter, publicQuery } from "./middleware";
+import { authRouter } from "./auth-router.js";
+import { customerRouter } from "./customer-router.js";
+import { serviceRouter } from "./service-router.js";
+import { productRouter } from "./product-router.js";
+import { appointmentRouter } from "./appointment-router.js";
+import { saleRouter } from "./sale-router.js";
+import { notificationRouter } from "./notification-router.js";
+import { expenseRouter } from "./expense-router.js";
+import { sessionRouter } from "./session-router.js";
+import { userRouter } from "./user-router.js";
+import { purchaseRouter } from "./purchase-router.js";
+import { createRouter, publicQuery } from "./middleware.js";
 
 export const appRouter = createRouter({
   ping: publicQuery.query(() => ({ ok: true, ts: Date.now() })),
