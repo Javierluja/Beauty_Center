@@ -1,5 +1,7 @@
+import mysql from "mysql2/promise";
 import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "../lib/env";
+
 import * as schema from "@db/schema";
 import * as relations from "@db/relations";
 
@@ -9,11 +11,19 @@ let instance: any;
 
 export function getDb() {
   if (!instance) {
-    // Cambiamos el modo a 'default' para máxima compatibilidad con TiDB
-    instance = drizzle(env.databaseUrl, {
+    const pool = mysql.createPool({
+      uri: env.databaseUrl,
+      ssl: {
+        rejectUnauthorized: true,
+      },
+      connectionLimit: 5,
+    });
+
+    instance = drizzle(pool, {
       schema: fullSchema,
-      mode: "default", 
+      mode: "default",
     });
   }
+
   return instance;
 }
