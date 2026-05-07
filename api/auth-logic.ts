@@ -4,7 +4,11 @@ import { findUserById } from "./queries/users";
 import { Session } from "@contracts/constants";
 import { Errors } from "@contracts/errors";
 
-const SECRET = new TextEncoder().encode(process.env.APP_SECRET || "beauty-center-secret-key-123");
+if (!process.env.APP_SECRET) {
+  throw new Error("APP_SECRET is missing");
+}
+
+const SECRET = new TextEncoder().encode(process.env.APP_SECRET);
 
 export async function signSessionToken(payload: { id: number; email: string; role: string }) {
   return await new jose.SignJWT(payload)
