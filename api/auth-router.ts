@@ -41,7 +41,7 @@ export const authRouter = createRouter({
         role: user.role,
       });
 
-      const opts = getSessionCookieOptions(ctx.req.headers);
+      const opts = getSessionCookieOptions(ctx.req?.headers ??{});
       ctx.resHeaders?.append?.(
         "set-cookie",
         cookie.serialize(Session.cookieName, token, {
