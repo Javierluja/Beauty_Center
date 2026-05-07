@@ -40,16 +40,7 @@ export const authRouter = createRouter({
         email: user.email,
         role: user.role,
       });
-
-      const opts = getSessionCookieOptions(ctx.req?.headers ??{});
-      ctx.resHeaders?.append?.(
-        "set-cookie",
-        cookie.serialize(Session.cookieName, token, {
-          ...opts,
-          maxAge: 60 * 60 * 24 * 7, // 7 días
-        }),
-      );
-
+      
       return { success: true, user: { id: user.id, name: user.name, role: user.role } };
     }),
 
