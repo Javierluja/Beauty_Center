@@ -1,7 +1,7 @@
 import * as cookie from "cookie";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { Session } from "@contracts/constants";
+import { Session } from "../src/contracts/constants.js";
 import { getSessionCookieOptions } from "./lib/cookies";
 import { createRouter, authedQuery, publicQuery } from "./middleware";
 import { signSessionToken } from "./auth-logic";
