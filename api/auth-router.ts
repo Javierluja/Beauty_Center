@@ -42,7 +42,7 @@ export const authRouter = createRouter({
       });
 
       const opts = getSessionCookieOptions(ctx.req.headers);
-      ctx.resHeaders.append(
+      ctx.resHeaders?.append?.(
         "set-cookie",
         cookie.serialize(Session.cookieName, token, {
           ...opts,
