@@ -12,11 +12,15 @@ export async function createContext(
 ): Promise<TrpcContext> {
   const ctx: TrpcContext = { req: opts.req, resHeaders: opts.resHeaders };
   try {
-    ctx.user = await authenticateRequest(opts.req.headers);
+    // Asegurar que req.headers es un objeto Headers
+    const headers = opts.req.headers instanceof Headers 
+      ? opts.req.headers 
+      : new Headers(opts.req.headers as any);
+    
+    ctx.user = await authenticateRequest(headers);
   } catch {
     // Authentication is optional here
   }
   return ctx;
 }
-
 
