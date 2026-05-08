@@ -4,12 +4,9 @@ import { createContext } from "./context.js";
 
 // Vercel Serverless Function handler
 export default async function handler(req: Request) {
-  // Construir la URL completa
-  const url = new URL(req.url, `https://${req.headers.get('host')}`);
-  
   return fetchRequestHandler({
     endpoint: "/api/trpc",
-    req: new Request(url, req),
+    req,
     router: appRouter,
     createContext,
     onError: ({ error, path }) => {
