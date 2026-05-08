@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createRouter, adminProQuery } from "./middleware.js";
-import { users } from "../db/schema";
+import { users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getDb } from "./queries/connection.js";
 import bcrypt from "bcryptjs"; // Importar para manejar contraseñas
@@ -54,3 +54,4 @@ export const userRouter = createRouter({
       });
     }),
 });
+

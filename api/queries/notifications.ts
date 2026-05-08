@@ -1,5 +1,5 @@
 import { getDb } from "./connection.js";
-import { notifications } from "@db/schema";
+import { notifications } from "../../db/schema.js";
 import { eq, desc, and, sql } from "drizzle-orm";
 
 export async function findAllNotifications(filters?: {
@@ -61,3 +61,4 @@ export async function deleteNotification(id: number) {
   const db = getDb();
   await db.delete(notifications).where(eq(notifications.id, id));
 }
+

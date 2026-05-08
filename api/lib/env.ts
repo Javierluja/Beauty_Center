@@ -15,3 +15,4 @@ export const env = {
   databaseUrl: required("DATABASE_URL"),
   adminEmail: process.env.ADMIN_EMAIL || "admin@beautycenter.com",
 };
+

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createRouter, adminQuery } from "./middleware.js";
-import { sessionPacks, sessionUsage } from "../db/schema";
+import { sessionPacks, sessionUsage } from "../db/schema.js";
 import { eq, and, sql } from "drizzle-orm";
 import { getDb } from "./queries/connection.js";
 
@@ -91,3 +91,4 @@ export const sessionRouter = createRouter({
         .where(eq(sessionUsage.packId, input));
     }),
 });
+

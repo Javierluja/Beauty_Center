@@ -1,5 +1,5 @@
 import { getDb } from "./connection.js";
-import { expenses, sales } from "@db/schema";
+import { expenses, sales } from "../../db/schema.js";
 import { eq, sql } from "drizzle-orm";
 
 export async function findAllExpenses() {
@@ -51,3 +51,4 @@ export async function getDailySummary() {
     net: income - expense,
   };
 }
+

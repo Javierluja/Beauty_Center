@@ -70,3 +70,4 @@ export const appointmentRouter = createRouter({
     .input(z.number())
     .mutation(({ input }) => deleteAppointment(input)),
 });
+

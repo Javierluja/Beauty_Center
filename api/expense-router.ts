@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createRouter, adminProQuery } from "./middleware.js";
-import { expenses } from "../db/schema";
+import { expenses } from "../db/schema.js";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "./queries/connection.js";
 
@@ -38,3 +38,4 @@ export const expenseRouter = createRouter({
       return await db.delete(expenses).where(eq(expenses.id, input));
     }),
 });
+

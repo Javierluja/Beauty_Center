@@ -107,3 +107,4 @@ export const saleRouter = createRouter({
     .input(z.number())
     .query(({ input }) => findSaleById(input)),
 });
+

@@ -1,5 +1,5 @@
 import { getDb } from "./connection.js";
-import { products } from "@db/schema";
+import { products } from "../../db/schema.js";
 import { eq, like, desc, lte, and } from "drizzle-orm";
 
 export async function findAllProducts(search?: string, active?: boolean, lowStock?: boolean) {
@@ -95,3 +95,4 @@ export async function updateProductStock(id: number, quantity: number) {
     
   return findProductById(id);
 }
+

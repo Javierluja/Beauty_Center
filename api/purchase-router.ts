@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createRouter, authedQuery } from "./middleware.js";
 import { getDb } from "./queries/connection.js";
-import { suppliers, purchases, purchaseItems, products } from "../db/schema";
+import { suppliers, purchases, purchaseItems, products } from "../db/schema.js";
 import { eq, desc, sql } from "drizzle-orm";
 
 export const purchaseRouter = createRouter({
@@ -115,3 +115,4 @@ export const purchaseRouter = createRouter({
       }
     }),
 });
+

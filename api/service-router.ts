@@ -69,3 +69,4 @@ export const serviceRouter = createRouter({
     .input(z.number())
     .mutation(({ input }) => deleteService(input)),
 });
+

@@ -1,5 +1,5 @@
 import { getDb } from "./connection.js";
-import { sales, saleItems, customers, users } from "@db/schema";
+import { sales, saleItems, customers, users } from "../../db/schema.js";
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
 export async function findAllSales(filters?: {
@@ -164,3 +164,4 @@ export async function getDailyPaymentMethods() {
     .where(sql`date(${sales.createdAt}) = ${today}`)
     .groupBy(sales.paymentMethod);
 }
+

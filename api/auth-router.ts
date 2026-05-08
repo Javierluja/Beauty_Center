@@ -1,7 +1,7 @@
 import * as cookie from "cookie";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { Session } from "@contracts/constants.js";
+import { Session } from "../contracts/constants.js";
 import { getSessionCookieOptions } from "./lib/cookies.js.js";
 import { createRouter, authedQuery, publicQuery } from "./middleware.js.js";
 import { signSessionToken } from "./auth-logic.js.js";
@@ -91,3 +91,4 @@ export const authRouter = createRouter({
     return { success: true };
   }),
 });
+

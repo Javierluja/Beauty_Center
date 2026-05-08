@@ -1,5 +1,5 @@
 import { getDb } from "./connection.js";
-import { appointments, customers, services } from "@db/schema";
+import { appointments, customers, services } from "../../db/schema.js";
 import { eq, and, gte, lte, asc, desc, sql } from "drizzle-orm";
 
 export async function findAllAppointments(filters?: {
@@ -145,3 +145,4 @@ export async function findUpcomingAppointments(days: number = 7) {
     )
     .orderBy(asc(appointments.appointmentDate), asc(appointments.appointmentTime));
 }
+

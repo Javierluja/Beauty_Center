@@ -37,3 +37,4 @@ export const notificationRouter = createRouter({
     .input(z.number())
     .mutation(({ input }) => deleteNotification(input)),
 });
+

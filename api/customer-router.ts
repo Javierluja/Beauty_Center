@@ -50,3 +50,4 @@ export const customerRouter = createRouter({
     .input(z.number())
     .mutation(({ input }) => deleteClient(input)),
 });
+

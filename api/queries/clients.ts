@@ -1,5 +1,5 @@
 import { getDb } from "./connection.js";
-import { customers } from "@db/schema";
+import { customers } from "../../db/schema.js";
 import { eq, like, desc } from "drizzle-orm";
 
 export async function findAllClients(search?: string) {
@@ -62,3 +62,4 @@ export async function deleteClient(id: number) {
   const db = getDb();
   await db.delete(customers).where(eq(customers.id, id));
 }
+

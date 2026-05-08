@@ -78,3 +78,4 @@ export const productRouter = createRouter({
     )
     .mutation(({ input }) => updateProductStock(input.id, input.quantity)),
 });
+

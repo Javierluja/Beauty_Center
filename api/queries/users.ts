@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { users } from "@db/schema";
+import { users } from "../../db/schema.js";
 import { getDb } from "./connection.js";
 
 export async function findUserByEmail(email: string) {
@@ -50,3 +50,4 @@ export async function deleteUser(id: number) {
   const db = getDb();
   await db.delete(users).where(eq(users.id, id));
 }
+

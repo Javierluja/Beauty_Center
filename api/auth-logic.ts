@@ -1,8 +1,8 @@
 import * as jose from "jose";
 import * as cookie from "cookie";
 import { findUserById } from "./queries/users.js";
-import { Session } from "@contracts/constants";
-import { Errors } from "@contracts/errors";
+import { Session } from "../contracts/constants.js";
+import { Errors } from "../contracts/errors.js";
 
 if (!process.env.APP_SECRET) {
   throw new Error("APP_SECRET is missing");
@@ -40,3 +40,4 @@ export async function authenticateRequest(headers: Headers) {
   const user = await findUserById(payload.id);
   return user || null;
 }
+
