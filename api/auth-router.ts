@@ -41,6 +41,13 @@ export const authRouter = createRouter({
         role: user.role,
       });
       
+  // 🔧 GUARDAR LA COOKIE DE SESIÓN
+    const opts = getSessionCookieOptions(ctx.req.headers);
+    ctx.resHeaders.append(
+      "set-cookie",
+      cookie.serialize(Session.cookieName, token, opts),
+    );
+      
       return { success: true, user: { id: user.id, name: user.name, role: user.role } };
     }),
 
