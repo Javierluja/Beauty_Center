@@ -41,3 +41,4 @@ export async function authenticateRequest(headers: Headers) {
   return user || null;
 }
 
+

@@ -62,3 +62,4 @@ export async function deleteNotification(id: number) {
   await db.delete(notifications).where(eq(notifications.id, id));
 }
 
+

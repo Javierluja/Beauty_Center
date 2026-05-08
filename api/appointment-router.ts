@@ -71,3 +71,4 @@ export const appointmentRouter = createRouter({
     .mutation(({ input }) => deleteAppointment(input)),
 });
 
+

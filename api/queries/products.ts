@@ -96,3 +96,4 @@ export async function updateProductStock(id: number, quantity: number) {
   return findProductById(id);
 }
 
+

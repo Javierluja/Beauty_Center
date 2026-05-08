@@ -16,3 +16,4 @@ export const env = {
   adminEmail: process.env.ADMIN_EMAIL || "admin@beautycenter.com",
 };
 
+

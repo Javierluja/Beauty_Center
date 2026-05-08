@@ -1,5 +1,5 @@
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
-import { authenticateRequest } from "./auth-logic.js.js";
+import { authenticateRequest } from "./auth-logic.js";
 
 export type TrpcContext = {
   req: Request;
@@ -18,4 +18,5 @@ export async function createContext(
   }
   return ctx;
 }
+
 

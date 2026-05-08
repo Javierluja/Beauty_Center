@@ -2,10 +2,10 @@ import * as cookie from "cookie";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { Session } from "../contracts/constants.js";
-import { getSessionCookieOptions } from "./lib/cookies.js.js";
-import { createRouter, authedQuery, publicQuery } from "./middleware.js.js";
-import { signSessionToken } from "./auth-logic.js.js";
-import { findUserByEmail, createUser } from "./queries/users.js.js";
+import { getSessionCookieOptions } from "./lib/cookies.js";
+import { createRouter, authedQuery, publicQuery } from "./middleware.js";
+import { signSessionToken } from "./auth-logic.js";
+import { findUserByEmail, createUser } from "./queries/users.js";
 import { TRPCError } from "@trpc/server";
 
 export const authRouter = createRouter({
@@ -91,4 +91,5 @@ export const authRouter = createRouter({
     return { success: true };
   }),
 });
+
 

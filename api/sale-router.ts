@@ -108,3 +108,4 @@ export const saleRouter = createRouter({
     .query(({ input }) => findSaleById(input)),
 });
 
+

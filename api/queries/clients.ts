@@ -63,3 +63,4 @@ export async function deleteClient(id: number) {
   await db.delete(customers).where(eq(customers.id, id));
 }
 
+

@@ -1,6 +1,6 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { appRouter } from "./router.js.js";
-import { createContext } from "./context.js.js";
+import { appRouter } from "./router.js";
+import { createContext } from "./context.js";
 
 // Vercel Serverless Function handler
 // This is the entry point for all /api/* requests
@@ -17,4 +17,5 @@ export default async function handler(req: Request) {
     },
   });
 }
+
 

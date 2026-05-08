@@ -146,3 +146,4 @@ export async function findUpcomingAppointments(days: number = 7) {
     .orderBy(asc(appointments.appointmentDate), asc(appointments.appointmentTime));
 }
 
+

@@ -81,3 +81,4 @@ export async function deleteService(id: number) {
   await db.delete(services).where(eq(services.id, id));
 }
 
+
