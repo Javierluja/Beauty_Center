@@ -11,12 +11,26 @@ const app = new Hono<{ Bindings: HttpBindings }>();
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
 app.use("/api/trpc/*", async (c) => {
-  return fetchRequestHandler({
+  const resHeaders = new Headers();
+  
+  const response = await fetchRequestHandler({
     endpoint: "/api/trpc",
     req: c.req.raw,
     router: appRouter,
-    createContext,
+    createContext: async (opts) => {
+      const ctx = await createContext(opts);
+      // Pasar los headers de respuesta del contexto
+      ctx.resHeaders = resHeaders;
+      return ctx;
+    },
   });
+
+  // Agregar los headers de respuesta que fueron establecidos en el contexto
+  for (const [key, value] of resHeaders.entries()) {
+    response.headers.append(key, value);
+  }
+
+  return response;
 });
 
 app.all("/api/*", (c) => c.json({ error: "Not Found" }, 404));
