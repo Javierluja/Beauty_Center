@@ -8,7 +8,7 @@ import {
   saleItems,
   sessionPacks,
   sessionUsage,
-} from "./schema";
+} from "./schema.js";
 
 export const usersRelations = relations(users, ({ many }) => ({
   appointments: many(appointments),
@@ -70,3 +70,4 @@ export const sessionUsageRelations = relations(sessionUsage, ({ one }) => ({
     references: [sessionPacks.id],
   }),
 }));
+
