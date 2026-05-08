@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { createRouter, authedQuery } from "./middleware";
+import { createRouter, authedQuery } from "./middleware.js";
 import {
   findAllNotifications,
   markNotificationAsSent,
   deleteNotification,
   createNotification,
-} from "./queries/notifications";
+} from "./queries/notifications.js";
 
 export const notificationRouter = createRouter({
   list: authedQuery

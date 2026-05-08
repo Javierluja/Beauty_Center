@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { createRouter, adminProQuery } from "./middleware";
+import { createRouter, adminProQuery } from "./middleware.js";
 import { expenses } from "../db/schema";
 import { desc, eq } from "drizzle-orm";
-import { getDb } from "./queries/connection";
+import { getDb } from "./queries/connection.js";
 
 export const expenseRouter = createRouter({
   list: adminProQuery.query(async () => {

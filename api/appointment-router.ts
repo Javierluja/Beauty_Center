@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createRouter, authedQuery } from "./middleware";
+import { createRouter, authedQuery } from "./middleware.js";
 import {
   findAllAppointments,
   findAppointmentById,
@@ -8,7 +8,7 @@ import {
   deleteAppointment,
   getTodayAppointmentsCount,
   findUpcomingAppointments,
-} from "./queries/appointments";
+} from "./queries/appointments.js";
 
 export const appointmentRouter = createRouter({
   list: authedQuery

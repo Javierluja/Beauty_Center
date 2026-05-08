@@ -1,6 +1,6 @@
 import * as jose from "jose";
 import * as cookie from "cookie";
-import { findUserById } from "./queries/users";
+import { findUserById } from "./queries/users.js";
 import { Session } from "@contracts/constants";
 import { Errors } from "@contracts/errors";
 

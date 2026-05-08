@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { createRouter, authedQuery, adminQuery } from "./middleware";
+import { createRouter, authedQuery, adminQuery } from "./middleware.js";
 import {
   findAllClients,
   findClientById,
   createClient,
   updateClient,
   deleteClient,
-} from "./queries/clients";
+} from "./queries/clients.js";
 
 export const customerRouter = createRouter({
   list: authedQuery

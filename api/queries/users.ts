@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { users } from "@db/schema";
-import { getDb } from "./connection";
+import { getDb } from "./connection.js";
 
 export async function findUserByEmail(email: string) {
   const rows = await getDb()

@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { createRouter, adminQuery } from "./middleware";
+import { createRouter, adminQuery } from "./middleware.js";
 import { sessionPacks, sessionUsage } from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
-import { getDb } from "./queries/connection";
+import { getDb } from "./queries/connection.js";
 
 export const sessionRouter = createRouter({
   listAll: adminQuery.query(async () => {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createRouter, authedQuery } from "./middleware";
+import { createRouter, authedQuery } from "./middleware.js";
 import {
   findAllSales,
   findSaleById,
@@ -9,8 +9,8 @@ import {
   getDailyPaymentMethods,
   updateSaleStatus,
   updateSaleAbono,
-} from "./queries/sales";
-import { getDailySummary } from "./queries/expenses"; // Importación verificada
+} from "./queries/sales.js";
+import { getDailySummary } from "./queries/expenses.js"; // Importación verificada
 
 export const saleRouter = createRouter({
   list: authedQuery

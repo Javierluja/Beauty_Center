@@ -1,4 +1,4 @@
-import { getDb } from "./connection";
+import { getDb } from "./connection.js";
 import { notifications } from "@db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 

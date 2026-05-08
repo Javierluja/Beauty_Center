@@ -1,13 +1,13 @@
 import { z } from "zod";
-import { createRouter, authedQuery, adminQuery } from "./middleware";
+import { createRouter, authedQuery, adminQuery } from "./middleware.js";
 import {
   findAllServices,
   findServiceById,
   createService,
   updateService,
   deleteService,
-} from "./queries/services";
-import { getDb } from "./queries/connection"; // RUTA ASEGURADA
+} from "./queries/services.js";
+import { getDb } from "./queries/connection.js"; // RUTA ASEGURADA
 
 export const serviceRouter = createRouter({
   list: authedQuery

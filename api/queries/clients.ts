@@ -1,4 +1,4 @@
-import { getDb } from "./connection";
+import { getDb } from "./connection.js";
 import { customers } from "@db/schema";
 import { eq, like, desc } from "drizzle-orm";
 

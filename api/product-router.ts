@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createRouter, authedQuery, adminQuery } from "./middleware";
+import { createRouter, authedQuery, adminQuery } from "./middleware.js";
 import {
   findAllProducts,
   findProductById,
@@ -7,7 +7,7 @@ import {
   updateProduct,
   deleteProduct,
   updateProductStock,
-} from "./queries/products";
+} from "./queries/products.js";
 
 export const productRouter = createRouter({
   list: authedQuery
