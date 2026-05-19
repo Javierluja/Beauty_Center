@@ -13,10 +13,15 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.use("/api/trpc/*", async (c) => {
   const resHeaders = new Headers();
   
-  let request = c.req.raw;
-  if (!request.url.startsWith("http")) {
-    request = new Request(c.req.url, c.req.raw);
-  }
+  const request = new Proxy(c.req.raw, {
+    get(target, prop) {
+      if (prop === "url") {
+        return c.req.url;
+      }
+      const value = Reflect.get(target, prop);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
 
   const response = await fetchRequestHandler({
     endpoint: "/api/trpc",
