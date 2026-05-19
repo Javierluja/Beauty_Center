@@ -1,12 +1,4 @@
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { appRouter } from "./router.js";
-import { createContext } from "./context.js";
+import { handle } from "hono/vercel";
+import app from "./boot.js";
 
-export default async function handler(req: Request) {
-  return fetchRequestHandler({
-    endpoint: "/api/trpc",
-    req,
-    router: appRouter,
-    createContext,
-  });
-}
+export default handle(app);
