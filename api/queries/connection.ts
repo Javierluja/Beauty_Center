@@ -14,9 +14,10 @@ export function getDb() {
     const pool = mysql.createPool({
       uri: env.databaseUrl,
       ssl: {
-        rejectUnauthorized: true,
+        rejectUnauthorized: false,
       },
       connectionLimit: 5,
+      connectTimeout: 10000,
     });
 
     instance = drizzle(pool, {
