@@ -13,9 +13,14 @@ app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.use("/api/trpc/*", async (c) => {
   const resHeaders = new Headers();
   
+  let request = c.req.raw;
+  if (!request.url.startsWith("http")) {
+    request = new Request(c.req.url, c.req.raw);
+  }
+
   const response = await fetchRequestHandler({
     endpoint: "/api/trpc",
-    req: c.req.raw,
+    req: request,
     router: appRouter,
     createContext: async (opts) => {
       const ctx = await createContext(opts);
