@@ -35,12 +35,17 @@ app.use("/api/trpc/*", async (c) => {
     },
   });
 
-  // Agregar los headers de respuesta que fueron establecidos en el contexto
+  // Crear una nueva respuesta con los headers combinados para evitar errores de cabeceras inmutables
+  const newHeaders = new Headers(response.headers);
   for (const [key, value] of resHeaders.entries()) {
-    response.headers.append(key, value);
+    newHeaders.append(key, value);
   }
 
-  return response;
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders,
+  });
 });
 
 app.all("/api/*", (c) => c.json({ error: "Not Found" }, 404));
