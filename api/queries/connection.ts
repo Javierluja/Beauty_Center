@@ -11,8 +11,12 @@ let instance: any;
 
 export function getDb() {
   if (!instance) {
+    const cleanUri = env.databaseUrl.includes("?") 
+      ? env.databaseUrl.split("?")[0] 
+      : env.databaseUrl;
+
     const pool = mysql.createPool({
-      uri: env.databaseUrl,
+      uri: cleanUri,
       ssl: {
         rejectUnauthorized: false,
       },
