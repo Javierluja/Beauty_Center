@@ -52,13 +52,17 @@ export default async function handler(req: Request) {
       return handleTestLogin();
     }
 
-    // Crear un Request con URL absoluta y pasar el body intacto
-    const absoluteReq = new Request(urlStr, {
+    // Crear un Request con URL absoluta y pasar el body intacto (evitando pasar body en GET/HEAD para prevenir TypeErrors)
+    const reqOptions: RequestInit = {
       method: req.method,
       headers: req.headers,
-      body: req.method === "GET" || req.method === "HEAD" ? null : req.body,
-      duplex: "half",
-    } as any);
+    };
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      reqOptions.body = req.body;
+      (reqOptions as any).duplex = "half";
+    }
+
+    const absoluteReq = new Request(urlStr, reqOptions);
 
     return fetchRequestHandler({
       endpoint: "/api/trpc",
