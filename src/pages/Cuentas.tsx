@@ -108,62 +108,60 @@ export default function Cuentas() {
             </div>
           ) : (
             filteredSales?.map(sale => (
-              <Card key={sale.id} className="border-2 border-primary/10 rounded-[2.5rem] shadow-xl hover:border-primary transition-all bg-admin-panel group overflow-hidden">
+              <Card key={sale.id} className="border border-primary/10 rounded-2xl shadow-md hover:border-primary transition-all bg-admin-panel group overflow-hidden">
                 <CardContent className="p-0">
                   <div className="flex flex-col md:flex-row md:items-center">
-                    <div className="p-6 flex-1 flex items-center gap-4">
-                      <div className="h-16 w-16 rounded-2xl bg-red-100 flex items-center justify-center text-red-600 shadow-inner">
-                        <User className="h-8 w-8" />
+                    <div className="p-4 flex-1 flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-inner">
+                        <User className="h-5 w-5" />
                       </div>
                       <div>
-                        <h3 className="font-black text-slate-900 text-lg uppercase leading-none mb-2 tracking-tight">{sale.clientName}</h3>
-                        <div className="flex flex-wrap gap-3">
-                          <Badge variant="outline" className="text-[10px] font-black h-6 px-3 border-slate-200 text-slate-600 flex items-center gap-2 uppercase bg-slate-100">
-                            <Calendar className="h-3 w-3 text-primary" /> {new Date(sale.createdAt).toLocaleDateString()}
+                        <h3 className="font-bold text-slate-900 text-sm uppercase leading-none mb-1 tracking-tight">{sale.clientName}</h3>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline" className="text-[9px] font-bold h-5 px-2 border-slate-200 text-muted-foreground flex items-center gap-1 uppercase bg-muted">
+                            <Calendar className="h-2.5 w-2.5 text-primary" /> {new Date(sale.createdAt).toLocaleDateString()}
                           </Badge>
-                          <Badge variant="outline" className="text-[10px] font-black h-6 px-3 border-slate-200 text-slate-600 flex items-center gap-2 uppercase bg-slate-100">
-                            <Wallet className="h-3 w-3 text-primary" /> Venta #{sale.id}
+                          <Badge variant="outline" className="text-[9px] font-bold h-5 px-2 border-slate-200 text-muted-foreground flex items-center gap-1 uppercase bg-muted">
+                            <Wallet className="h-2.5 w-2.5 text-primary" /> Venta #{sale.id}
                           </Badge>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-red-50 md:bg-transparent p-8 flex flex-col md:flex-row items-center justify-between gap-8 border-t-2 md:border-t-0 border-slate-50 w-full md:w-auto">
-                      <div className="text-center md:text-right w-full md:w-auto flex flex-col gap-1">
-                        <p className="text-[11px] font-black text-red-400 uppercase tracking-[0.2em]">Adeuda</p>
-                        <p className="text-4xl font-black text-red-600 tracking-tighter">${Math.max(0, Number(sale.finalTotal) - Number(sale.amountPaid || 0)).toLocaleString()}</p>
+                    <div className="bg-red-50/50 md:bg-transparent p-4 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-slate-100 md:border-t-0 w-full md:w-auto">
+                      <div className="text-center md:text-right w-full md:w-auto flex flex-col gap-0.5">
+                        <p className="text-[9px] font-black text-red-400 uppercase tracking-wider">Adeuda</p>
+                        <p className="text-2xl font-black text-red-600 tracking-tighter">${Math.max(0, Number(sale.finalTotal) - Number(sale.amountPaid || 0)).toLocaleString()}</p>
                         {Number(sale.amountPaid) > 0 && (
-                          <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mt-1 bg-green-50 px-2 py-1 rounded-md border border-green-100">
+                          <p className="text-[8px] font-bold text-green-600 uppercase tracking-wider mt-0.5 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">
                             Abonado: ${Number(sale.amountPaid).toLocaleString()}
                           </p>
                         )}
                       </div>
-                      <div className="flex flex-col gap-2 w-full md:w-auto">
-                        <div className="flex items-center gap-2">
-                          <Input 
-                            type="number" 
-                            placeholder="Monto" 
-                            className="w-28 h-12 rounded-xl border-2 border-slate-200 font-black text-lg focus:border-primary transition-all"
-                            value={abonos[sale.id] || ""}
-                            onChange={(e) => setAbonos({ ...abonos, [sale.id]: e.target.value })}
-                          />
-                          <Button 
-                            onClick={() => {
-                              if (!abonos[sale.id]) return;
-                              registerAbono.mutate({ id: sale.id, amount: abonos[sale.id] });
-                              setAbonos({ ...abonos, [sale.id]: "" });
-                            }}
-                            disabled={registerAbono.isPending || !abonos[sale.id]}
-                            className="bg-primary hover:bg-primary/90 text-white font-black rounded-xl h-12 px-6 shadow-xl uppercase text-xs tracking-widest"
-                          >
-                            Abonar
-                          </Button>
-                        </div>
+                      <div className="flex items-center gap-1.5 w-full md:w-auto justify-center md:justify-end">
+                        <Input 
+                          type="number" 
+                          placeholder="Monto" 
+                          className="w-20 h-9 rounded-lg border-2 border-slate-200 font-bold text-sm focus:border-primary transition-all"
+                          value={abonos[sale.id] || ""}
+                          onChange={(e) => setAbonos({ ...abonos, [sale.id]: e.target.value })}
+                        />
+                        <Button 
+                          onClick={() => {
+                            if (!abonos[sale.id]) return;
+                            registerAbono.mutate({ id: sale.id, amount: abonos[sale.id] });
+                            setAbonos({ ...abonos, [sale.id]: "" });
+                          }}
+                          disabled={registerAbono.isPending || !abonos[sale.id]}
+                          className="bg-primary hover:bg-primary/90 text-white font-bold rounded-lg h-9 px-3 shadow-md uppercase text-[10px] tracking-wider"
+                        >
+                          Abonar
+                        </Button>
                         <Button 
                           onClick={() => markAsPaid.mutate({ id: sale.id, status: 'paid' })}
-                          className="bg-green-600 hover:bg-green-700 text-white font-black rounded-xl h-12 px-6 shadow-xl shadow-green-200 uppercase tracking-widest w-full mt-2"
+                          className="bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg h-9 px-3 shadow-md uppercase text-[10px] tracking-wider"
                         >
-                          Saldar Total
+                          Saldar
                         </Button>
                       </div>
                     </div>
@@ -190,27 +188,27 @@ export default function Cuentas() {
           <div className="grid gap-4">
             {loadingClients ? [1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-3xl" />) : 
               clients?.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).map(client => (
-                <Card key={client.id} className="border-2 border-primary/10 rounded-[2.5rem] shadow-xl hover:border-primary transition-all bg-admin-panel group overflow-hidden">
+                <Card key={client.id} className="border border-primary/10 rounded-2xl shadow-md hover:border-primary transition-all bg-admin-panel group overflow-hidden">
                   <CardContent className="p-0">
                     <div className="flex flex-col md:flex-row md:items-center">
-                      <div className="p-6 flex-1 flex items-center gap-4">
-                        <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
-                           <Gift className="h-8 w-8" />
+                      <div className="p-4 flex-1 flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                           <Gift className="h-5 w-5" />
                         </div>
                         <div>
-                          <h3 className="font-black text-slate-900 text-lg uppercase leading-none mb-2 tracking-tight">{client.name}</h3>
-                          <Badge variant="outline" className="text-[10px] font-black h-6 px-3 border-slate-200 text-slate-600 flex items-center gap-2 uppercase bg-slate-100">
+                          <h3 className="font-bold text-slate-900 text-sm uppercase leading-none mb-1 tracking-tight">{client.name}</h3>
+                          <Badge variant="outline" className="text-[9px] font-bold h-5 px-2 border-slate-200 text-muted-foreground flex items-center gap-1 uppercase bg-muted">
                             Saldo Actual: ${Number(client.balance || 0).toLocaleString()}
                           </Badge>
                         </div>
                       </div>
 
-                      <div className="bg-primary/5 md:bg-transparent p-8 flex flex-col md:flex-row items-center justify-between gap-8 border-t-2 md:border-t-0 border-primary/10 w-full md:w-auto">
-                        <div className="flex items-center gap-2 w-full md:w-auto">
+                      <div className="bg-primary/5 md:bg-transparent p-4 flex items-center justify-between gap-4 border-t border-primary/10 md:border-t-0 w-full md:w-auto">
+                        <div className="flex items-center gap-1.5 w-full md:w-auto justify-center md:justify-end">
                           <Input 
                             type="number" 
-                            placeholder="Monto Giftcard" 
-                            className="w-40 h-12 rounded-xl border-2 border-primary/20 font-black text-lg focus:border-primary transition-all bg-white"
+                            placeholder="Monto" 
+                            className="w-24 h-9 rounded-lg border-2 border-primary/20 font-bold text-sm focus:border-primary transition-all bg-white"
                             value={giftBalances[client.id] || ""}
                             onChange={(e) => setGiftBalances({ ...giftBalances, [client.id]: e.target.value })}
                           />
@@ -221,9 +219,9 @@ export default function Cuentas() {
                               setGiftBalances({ ...giftBalances, [client.id]: "" });
                             }}
                             disabled={addGiftBalance.isPending || !giftBalances[client.id]}
-                            className="bg-primary hover:bg-primary/90 text-white font-black rounded-xl h-12 px-6 shadow-xl uppercase text-xs tracking-widest"
+                            className="bg-primary hover:bg-primary/90 text-white font-bold rounded-lg h-9 px-3 shadow-md uppercase text-[10px] tracking-wider"
                           >
-                            Añadir Saldo
+                            Cargar
                           </Button>
                         </div>
                       </div>

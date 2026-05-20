@@ -107,7 +107,7 @@ export default function Productos() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Inventario</h1>
+          <h1 className="text-3xl md:text-4xl font-black text-primary tracking-tighter uppercase">Inventario 📦</h1>
           <p className="text-xs md:text-sm text-muted-foreground font-medium italic">Gestión masiva de productos</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -183,28 +183,28 @@ export default function Productos() {
               ) : products?.map(product => {
                 const isLow = product.stock <= product.minStock;
                 return (
-                  <tr key={product.id} className={`hover:bg-primary/5 transition-colors group ${isLow ? 'bg-red-50/30' : ''}`}>
+                  <tr key={product.id} className={`hover:bg-primary/5 transition-colors group ${isLow ? 'bg-destructive/5' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border-2 ${isLow ? 'bg-red-100 border-red-200 text-red-600' : 'bg-primary/10 border-primary/10 text-primary'}`}>
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border-2 ${isLow ? 'bg-destructive/10 border-destructive/20 text-destructive' : 'bg-primary/10 border-primary/10 text-primary'}`}>
                           <Box className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="font-black text-slate-900 uppercase text-xs">{product.name}</p>
-                          {product.sku && <p className="text-[9px] font-black text-slate-500 mt-0.5 tracking-widest">{product.sku}</p>}
+                          <p className="font-black text-foreground uppercase text-xs">{product.name}</p>
+                          {product.sku && <p className="text-[9px] font-black text-muted-foreground mt-0.5 tracking-widest">{product.sku}</p>}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-widest flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                      <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1 bg-muted px-3 py-1 rounded-full border border-border">
                         <Sparkles className="h-3 w-3 text-primary" /> {product.category || 'General'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center whitespace-nowrap">
-                      <span className="font-black text-slate-800">${Math.floor(Number(product.price)).toLocaleString()}</span>
+                      <span className="font-black text-foreground">${Math.floor(Number(product.price)).toLocaleString()}</span>
                     </td>
                     <td className="px-6 py-4 text-center whitespace-nowrap">
-                      <span className={`inline-flex items-center justify-center min-w-[3rem] px-2 py-1 rounded-md text-[10px] font-black ${isLow ? 'bg-red-100 text-red-700 ring-1 ring-red-300 animate-pulse' : 'bg-green-50 text-green-700 ring-1 ring-green-200'}`}>
+                      <span className={`inline-flex items-center justify-center min-w-[3rem] px-2 py-1 rounded-md text-[10px] font-black ${isLow ? 'bg-destructive/10 text-destructive ring-1 ring-destructive/20 animate-pulse' : 'bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20'}`}>
                         {product.stock}
                       </span>
                     </td>
