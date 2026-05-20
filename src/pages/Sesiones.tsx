@@ -84,6 +84,33 @@ export default function Sesiones() {
     }
   });
 
+  const updateAppointment = trpc.appointment.update.useMutation({
+    onSuccess: () => {
+      utils.appointment.invalidate();
+    },
+    onError: (err) => {
+      toast({ title: "Error al actualizar cita", description: err.message, variant: "destructive" });
+    }
+  });
+
+  const handleUseSession = (pack: any) => {
+    if (pack.remainingSessions <= 0) return;
+    
+    const pendingAppt = allAppointments?.find(a => a.packId === pack.id && a.status === "pending");
+
+    if (pack.remainingSessions === 1) {
+      // Es la última sesión, se marca como consumida directamente
+      useSession.mutate({ packId: pack.id });
+      // Se completa la cita pendiente del pack
+      if (pendingAppt) {
+        updateAppointment.mutate({ id: pendingAppt.id, status: "completed" });
+      }
+    } else {
+      // Quedan más sesiones, se abre el diálogo para agendar la próxima
+      setSchedulingPack(pack);
+    }
+  };
+
   function resetForm() {
     setSelectedClientId("");
     setSelectedServiceId("");
@@ -249,7 +276,7 @@ export default function Sesiones() {
                       <Button
                         size="sm"
                         className={`font-bold px-5 shadow-md ${pack.remainingSessions === 0 ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-primary hover:bg-primary/90"}`}
-                        onClick={() => pack.remainingSessions > 0 && setSchedulingPack(pack)}
+                        onClick={() => handleUseSession(pack)}
                         disabled={useSession.isPending || pack.remainingSessions === 0}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
@@ -303,6 +330,10 @@ export default function Sesiones() {
                     status: "pending",
                     notes: `Sesión programada desde pack: ${schedulingPack.customTitle}`
                   });
+                  const pendingAppt = allAppointments?.find(a => a.packId === schedulingPack.id && a.status === "pending");
+                  if (pendingAppt) {
+                    updateAppointment.mutate({ id: pendingAppt.id, status: "completed" });
+                  }
                   const client = clients?.find(c => c.id === schedulingPack.clientId);
                   createNotification.mutate({
                     clientId: schedulingPack.clientId,

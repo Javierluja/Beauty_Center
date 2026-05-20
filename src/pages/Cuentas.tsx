@@ -69,7 +69,7 @@ export default function Cuentas() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-5xl font-black text-primary tracking-tighter uppercase">Control de Créditos 💰</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-primary tracking-tight uppercase">Control de Créditos 💰</h1>
           <p className="text-xs md:text-sm text-slate-600 font-black italic mt-1 uppercase tracking-widest">Cuentas pendientes por cobrar</p>
         </div>
         <Card className="bg-primary text-white border-none rounded-3xl px-8 py-4 shadow-xl shadow-primary/20">
@@ -116,7 +116,7 @@ export default function Cuentas() {
                         <User className="h-8 w-8" />
                       </div>
                       <div>
-                        <h3 className="font-black text-slate-900 text-2xl uppercase leading-none mb-2 tracking-tight">{sale.clientName}</h3>
+                        <h3 className="font-black text-slate-900 text-lg uppercase leading-none mb-2 tracking-tight">{sale.clientName}</h3>
                         <div className="flex flex-wrap gap-3">
                           <Badge variant="outline" className="text-[10px] font-black h-6 px-3 border-slate-200 text-slate-600 flex items-center gap-2 uppercase bg-slate-100">
                             <Calendar className="h-3 w-3 text-primary" /> {new Date(sale.createdAt).toLocaleDateString()}
@@ -195,10 +195,10 @@ export default function Cuentas() {
                     <div className="flex flex-col md:flex-row md:items-center">
                       <div className="p-6 flex-1 flex items-center gap-4">
                         <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
-                          <Gift className="h-8 w-8" />
+                           <Gift className="h-8 w-8" />
                         </div>
                         <div>
-                          <h3 className="font-black text-slate-900 text-2xl uppercase leading-none mb-2 tracking-tight">{client.name}</h3>
+                          <h3 className="font-black text-slate-900 text-lg uppercase leading-none mb-2 tracking-tight">{client.name}</h3>
                           <Badge variant="outline" className="text-[10px] font-black h-6 px-3 border-slate-200 text-slate-600 flex items-center gap-2 uppercase bg-slate-100">
                             Saldo Actual: ${Number(client.balance || 0).toLocaleString()}
                           </Badge>
