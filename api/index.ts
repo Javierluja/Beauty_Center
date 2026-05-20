@@ -1,8 +1,15 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "./router.js";
 import { createContext } from "./context.js";
+import type { IncomingMessage, ServerResponse } from "http";
 
-async function handleTestLogin() {
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+async function handleTestLogin(res: ServerResponse) {
   try {
     const { getDb } = await import("./queries/connection.js");
     const { sql } = await import("drizzle-orm");
@@ -24,69 +31,80 @@ async function handleTestLogin() {
       .setExpirationTime("7d")
       .sign(SECRET);
 
-    return new Response(`All checks passed successfully! User found: ${!!user}`, {
-      status: 200,
-      headers: { "Content-Type": "text/plain" },
-    });
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/plain");
+    res.end(`All checks passed successfully! User found: ${!!user}`);
   } catch (error: any) {
-    return new Response(`Error: ${error.message}`, {
-      status: 500,
-      headers: { "Content-Type": "text/plain" },
-    });
+    res.statusCode = 500;
+    res.setHeader("Content-Type", "text/plain");
+    res.end(`Error: ${error.message}`);
   }
 }
 
-export default async function handler(req: Request) {
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
   try {
-    // 1. Obtener la URL absoluta para evitar el error "Invalid URL" en Vercel
-    let urlStr = req.url;
-    if (urlStr.startsWith("/")) {
-      const host = req.headers.get("host") || "localhost";
-      const protocol = host.startsWith("localhost") ? "http" : "https";
-      urlStr = `${protocol}://${host}${urlStr}`;
-    }
+    // 1. Reconstruir la URL absoluta
+    const host = req.headers.host || "localhost";
+    const protocol = host.startsWith("localhost") ? "http" : "https";
+    const urlStr = `${protocol}://${host}${req.url}`;
     const url = new URL(urlStr);
 
-    // 2. Enrutar las peticiones de tRPC
+    // 2. Enrutar petición de diagnóstico
+    if (url.pathname === "/api/trpc/test-login") {
+      return handleTestLogin(res);
+    }
+
+    // 3. Enrutar peticiones de tRPC
     if (url.pathname.startsWith("/api/trpc/")) {
-      if (url.pathname === "/api/trpc/test-login") {
-        return handleTestLogin();
-      }
-
-      // Crear un Request con URL absoluta y pasar el body intacto (evitando pasar body en GET/HEAD para prevenir TypeErrors)
-      const reqOptions: RequestInit = {
-        method: req.method,
-        headers: req.headers,
-      };
+      // Leer el cuerpo de la petición de forma segura usando acumulador de Node.js
+      let bodyBuffer: Buffer | undefined = undefined;
       if (req.method !== "GET" && req.method !== "HEAD") {
-        reqOptions.body = req.body;
-        (reqOptions as any).duplex = "half";
+        const chunks: any[] = [];
+        for await (const chunk of req) {
+          chunks.push(chunk);
+        }
+        bodyBuffer = Buffer.concat(chunks);
       }
 
-      const absoluteReq = new Request(urlStr, reqOptions);
+      // Construir el objeto Web Request estándar a partir del Request de Node.js
+      const webReq = new Request(urlStr, {
+        method: req.method,
+        headers: req.headers as any,
+        body: bodyBuffer,
+      });
 
-      return await fetchRequestHandler({
+      // Procesar la petición usando el adaptador oficial de tRPC
+      const webRes = await fetchRequestHandler({
         endpoint: "/api/trpc",
-        req: absoluteReq,
+        req: webReq,
         router: appRouter,
         createContext,
       });
+
+      // Escribir el código de estado y cabeceras de respuesta al objeto Node.js res
+      res.statusCode = webRes.status;
+      webRes.headers.forEach((value, key) => {
+        res.setHeader(key, value);
+      });
+
+      // Leer el cuerpo de respuesta de tRPC y enviarlo
+      const resBody = await webRes.text();
+      res.end(resBody);
+      return;
     }
 
-    // 3. Responder 404 para cualquier otra ruta de la API
-    return new Response(JSON.stringify({ error: "Not Found" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
+    // 4. Responder 404 para cualquier otra ruta de la API
+    res.statusCode = 404;
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ error: "Not Found" }));
   } catch (error: any) {
     console.error("[FATAL ERROR] in Vercel handler:", error);
-    return new Response(JSON.stringify({
+    res.statusCode = 500;
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({
       error: "Internal Server Error",
       message: error.message,
       stack: error.stack,
-    }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    }));
   }
 }
