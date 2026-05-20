@@ -48,6 +48,40 @@ app.use("/api/trpc/*", async (c) => {
   });
 });
 
+app.get("/api/test-login", async (c) => {
+  try {
+    console.log("[DIAG] 1. Starting test-login");
+    const { getDb } = await import("./queries/connection.js");
+    const { sql } = await import("drizzle-orm");
+    
+    console.log("[DIAG] 2. Connecting to DB");
+    const db = getDb();
+    const result = await db.execute(sql`SELECT 1`);
+    console.log("[DIAG] 3. DB test query success");
+
+    console.log("[DIAG] 4. Hashing check");
+    const bcrypt = await import("bcryptjs");
+    const hash = await bcrypt.default.hash("test123456", 10);
+    const match = await bcrypt.default.compare("test123456", hash);
+    console.log("[DIAG] 5. Hashing success (match:", match, ")");
+
+    console.log("[DIAG] 6. Sign JWT check");
+    const jose = await import("jose");
+    const SECRET = new TextEncoder().encode(process.env.APP_SECRET || "fallback");
+    const token = await new jose.SignJWT({ test: true })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("7d")
+      .sign(SECRET);
+    console.log("[DIAG] 7. JWT sign success");
+
+    return c.text("All checks passed successfully!");
+  } catch (error: any) {
+    console.error("[DIAG] Error in test-login:", error);
+    return c.text(`Error: ${error.message}`);
+  }
+});
+
 app.all("/api/*", (c) => c.json({ error: "Not Found" }, 404));
 
 export default app;
