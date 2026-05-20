@@ -10,12 +10,22 @@ const app = new Hono<{ Bindings: HttpBindings }>();
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
-app.get("/api/trpc/test-login", async (c) => {
+app.all("/api/trpc/test-login", async (c) => {
   try {
-    console.log("[DIAG] 1. Starting test-login");
+    console.log("[DIAG] 1. Starting test-login. Method:", c.req.method);
     const { getDb } = await import("./queries/connection.js");
     const { sql } = await import("drizzle-orm");
     
+    if (c.req.method === "POST") {
+      console.log("[DIAG] 1.1 Reading body as text");
+      const bodyText = await c.req.text();
+      console.log("[DIAG] 1.2 Body text read success. Length:", bodyText.length);
+      
+      console.log("[DIAG] 1.3 Reading body as JSON");
+      const bodyJson = JSON.parse(bodyText);
+      console.log("[DIAG] 1.4 Body JSON parsed success. Keys:", Object.keys(bodyJson));
+    }
+
     console.log("[DIAG] 2. Connecting to DB");
     const db = getDb();
     const result = await db.execute(sql`SELECT 1`);
