@@ -21,6 +21,11 @@ app.get("/api/trpc/test-login", async (c) => {
     const result = await db.execute(sql`SELECT 1`);
     console.log("[DIAG] 3. DB test query success");
 
+    console.log("[DIAG] 3.1. Querying user by email using Drizzle");
+    const { findUserByEmail } = await import("./queries/users.js");
+    const user = await findUserByEmail("lujamonkey@gmail.com");
+    console.log("[DIAG] 3.2. Drizzle query success (user found:", !!user, ")");
+
     console.log("[DIAG] 4. Hashing check");
     const bcrypt = await import("bcryptjs");
     const hash = await bcrypt.default.hash("test123456", 10);
