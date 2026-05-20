@@ -69,13 +69,16 @@ app.use("/api/trpc/*", async (c) => {
     },
   });
 
+  // Leer el cuerpo como texto para evitar bloqueos/deadlocks de streams (ReadableStream) en Vercel
+  const bodyText = await response.text();
+
   // Crear una nueva respuesta con los headers combinados para evitar errores de cabeceras inmutables
   const newHeaders = new Headers(response.headers);
   for (const [key, value] of resHeaders.entries()) {
     newHeaders.append(key, value);
   }
 
-  return new Response(response.body, {
+  return new Response(bodyText, {
     status: response.status,
     statusText: response.statusText,
     headers: newHeaders,
