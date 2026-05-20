@@ -37,6 +37,21 @@ app.get("/api/trpc/test-login", async (c) => {
       .sign(SECRET);
     console.log("[DIAG] 7. JWT sign success");
 
+    console.log("[DIAG] 8. Cookie serialization check");
+    const cookie = await import("cookie");
+    const { getSessionCookieOptions } = await import("./lib/cookies.js");
+    const { Session } = await import("../contracts/constants.js");
+
+    const cookieOpts = getSessionCookieOptions(c.req.raw.headers);
+    console.log("[DIAG] 8.1 Cookie options:", JSON.stringify(cookieOpts));
+    
+    const cookieStr = cookie.default.serialize(Session.cookieName, token, cookieOpts as any);
+    console.log("[DIAG] 8.2 Cookie string serialized");
+
+    const testHeaders = new Headers();
+    testHeaders.append("set-cookie", cookieStr);
+    console.log("[DIAG] 8.3 Cookie appended to Headers");
+
     return c.text("All checks passed successfully!");
   } catch (error: any) {
     console.error("[DIAG] Error in test-login:", error);
