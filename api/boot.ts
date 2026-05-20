@@ -72,6 +72,12 @@ app.use("/api/trpc/*", async (c) => {
       if (prop === "url") {
         return c.req.url;
       }
+      if (prop === "text") {
+        return () => c.req.text();
+      }
+      if (prop === "json") {
+        return () => c.req.json();
+      }
       const value = Reflect.get(target, prop);
       return typeof value === "function" ? value.bind(target) : value;
     },
