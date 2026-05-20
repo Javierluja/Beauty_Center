@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createRouter, adminProQuery } from "./middleware.js";
+import { createRouter, adminProQuery, authedQuery } from "./middleware.js";
 import { users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getDb } from "./queries/connection.js";
@@ -33,12 +33,27 @@ export const userRouter = createRouter({
         .where(eq(users.id, input.userId));
     }),
 
+  updatePermissions: adminProQuery
+    .input(
+      z.object({
+        userId: z.number(),
+        permissions: z.string(), // We store it as string/JSON text
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = getDb();
+      return await db
+        .update(users)
+        .set({ permissions: input.permissions, updatedAt: new Date() })
+        .where(eq(users.id, input.userId));
+    }),
+
   create: adminProQuery
     .input(
       z.object({
         name: z.string(),
         email: z.string().email(),
-        password: z.string(), // Ahora recibimos la contraseña
+        password: z.string(),
         role: z.enum(["admin_pro", "ventas"]),
       })
     )
@@ -49,9 +64,33 @@ export const userRouter = createRouter({
       return await db.insert(users).values({
         name: input.name,
         email: input.email,
-        password: hashedPassword, // Guardamos la contraseña encriptada
+        password: hashedPassword,
         role: input.role,
       });
+    }),
+
+  changePassword: authedQuery
+    .input(
+      z.object({
+        currentPassword: z.string(),
+        newPassword: z.string(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = getDb();
+      const user = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1).then(r => r[0]);
+      if (!user) throw new Error("Usuario no encontrado");
+
+      const valid = await bcrypt.compare(input.currentPassword, user.password);
+      if (!valid) {
+        throw new Error("Contraseña actual incorrecta");
+      }
+
+      const hashedPassword = await bcrypt.hash(input.newPassword, 10);
+      return await db
+        .update(users)
+        .set({ password: hashedPassword, updatedAt: new Date() })
+        .where(eq(users.id, ctx.user.id));
     }),
 });
 

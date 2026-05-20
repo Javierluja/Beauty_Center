@@ -63,6 +63,18 @@ export default function Personal() {
     }
   });
 
+  const [permDialogOpen, setPermDialogOpen] = useState(false);
+  const [permUserId, setPermUserId] = useState<number | null>(null);
+  const [perms, setPerms] = useState<Record<string, boolean>>({ clientes: true, cuentas: true, personal: false });
+
+  const updatePerms = trpc.user.updatePermissions.useMutation({
+    onSuccess: () => {
+      utils.user.list.invalidate();
+      setPermDialogOpen(false);
+      toast({ title: "Permisos actualizados", description: "El menú del usuario cambiará en su próximo acceso." });
+    }
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -133,15 +145,48 @@ export default function Personal() {
                 
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
                   <p className="text-[10px] text-muted-foreground">Acceso Habilitado</p>
-                  <Button variant="ghost" size="icon" onClick={() => { if(confirm("¿Quitar acceso a este usuario?")) deleteMutation.mutate(user.id) }} className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl border border-destructive/10">
-                    <Trash2 className="h-5 w-5" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => { 
+                      setPermUserId(user.id); 
+                      const p = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
+                      setPerms(p || { clientes: true, cuentas: true, personal: false }); 
+                      setPermDialogOpen(true); 
+                    }} className="h-10 px-4 rounded-xl text-xs font-bold uppercase">
+                      Permisos
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => { if(confirm("¿Quitar acceso a este usuario?")) deleteMutation.mutate(user.id) }} className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl border border-destructive/10">
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))
         }
       </div>
+
+      <Dialog open={permDialogOpen} onOpenChange={setPermDialogOpen}>
+        <DialogContent className="max-w-xs rounded-3xl bg-card border border-border">
+          <DialogHeader><DialogTitle className="font-black uppercase">Permisos del Sistema</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between p-3 border border-border rounded-xl">
+              <span className="font-bold text-sm">Módulo Cuentas</span>
+              <div onClick={() => setPerms({...perms, cuentas: !perms.cuentas})} className={`h-6 w-11 rounded-full cursor-pointer relative transition-colors ${perms.cuentas ? 'bg-primary' : 'bg-muted-foreground/30'}`}>
+                <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform ${perms.cuentas ? 'translate-x-6' : 'translate-x-1'}`} />
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-3 border border-border rounded-xl">
+              <span className="font-bold text-sm">Módulo Clientes</span>
+              <div onClick={() => setPerms({...perms, clientes: !perms.clientes})} className={`h-6 w-11 rounded-full cursor-pointer relative transition-colors ${perms.clientes ? 'bg-primary' : 'bg-muted-foreground/30'}`}>
+                <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform ${perms.clientes ? 'translate-x-6' : 'translate-x-1'}`} />
+              </div>
+            </div>
+          </div>
+          <Button onClick={() => updatePerms.mutate({ userId: permUserId!, permissions: JSON.stringify(perms) })} className="w-full bg-primary font-black uppercase rounded-xl h-12" disabled={updatePerms.isPending}>
+            Guardar Permisos
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

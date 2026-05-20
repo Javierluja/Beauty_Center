@@ -45,7 +45,7 @@ export default function Ventas() {
   const utils = trpc.useUtils();
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<any[]>([]);
-  const [clientId, setClientId] = useState<string>("1");
+  const [clientId, setClientId] = useState<string>("general");
   const [paymentMethod, setPaymentMethod] = useState<string>("contado");
   const [discount, setDiscount] = useState("0");
 
@@ -118,13 +118,13 @@ export default function Ventas() {
 
   function handleCheckout() {
     if (cart.length === 0) return;
-    if (paymentMethod === 'credito' && clientId === "1") {
+    if (paymentMethod === 'credito' && clientId === "general") {
       toast({ title: "Acción no permitida", description: "Ventas a crédito requieren cliente registrado.", variant: "destructive" });
       return;
     }
 
     createSale.mutate({
-      clientId: Number(clientId),
+      clientId: clientId === "general" ? undefined : Number(clientId),
       paymentMethod,
       discount: discount,
       total: cartTotal.toString(),
@@ -146,8 +146,8 @@ export default function Ventas() {
         <h1 className="text-2xl font-black text-foreground tracking-tight">Punto de Venta</h1>
       </div>
 
-      <Tabs defaultValue="caja" className="w-full h-full">
-        <TabsList className="bg-muted p-1.5 h-12 rounded-xl w-full max-w-[420px] grid grid-cols-2 mb-6 border border-border">
+      <Tabs defaultValue="caja" className="w-full h-full flex flex-col">
+        <TabsList className="bg-muted p-1 h-10 rounded-xl w-full max-w-[300px] grid grid-cols-2 mb-4 border border-border">
           <TabsTrigger value="caja" className="rounded-lg font-semibold text-xs uppercase data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md">
             Caja
           </TabsTrigger>
@@ -156,10 +156,10 @@ export default function Ventas() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="caja" className="m-0">
-          <div className="grid lg:grid-cols-12 gap-6 h-[calc(100vh-180px)]">
+        <TabsContent value="caja" className="m-0 flex-1">
+          <div className="grid lg:grid-cols-12 gap-6 h-[calc(100vh-130px)] min-h-[500px]">
             {/* SELECCIÓN IZQUIERDA */}
-            <div className="lg:col-span-7 flex flex-col gap-4 overflow-hidden">
+            <div className="lg:col-span-7 flex flex-col gap-3 overflow-hidden">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
           <Input 
@@ -168,6 +168,40 @@ export default function Ventas() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 h-12 rounded-2xl border-primary/10 bg-background shadow-sm font-bold"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
+          <div className="space-y-1">
+            <Label className="text-[10px] font-medium uppercase text-muted-foreground ml-1">Cliente</Label>
+            <Select value={clientId} onValueChange={setClientId}>
+              <SelectTrigger className="rounded-xl border-primary/10 h-10 bg-background font-bold text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="general">Cliente General (Sin registro)</SelectItem>
+                {(clients || []).map((c: any) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px] font-black uppercase text-slate-800 ml-1">Forma de Pago</Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger className="rounded-xl border-primary/10 h-10 bg-background font-bold text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {PAYMENT_METHODS.map(m => {
+                  const Icon = m.icon;
+                  return (
+                  <SelectItem key={m.id} value={m.id} className="text-xs font-bold uppercase">
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-3 w-3" /> {m.label}
+                    </div>
+                  </SelectItem>
+                )})}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <Tabs defaultValue="servicios" className="flex-1 flex flex-col overflow-hidden">
@@ -233,13 +267,13 @@ export default function Ventas() {
 
       {/* CARRITO Y CIERRE DERECHA */}
       <Card className="lg:col-span-5 border border-border shadow-xl rounded-2xl overflow-hidden flex flex-col bg-card">
-        <CardHeader className="border-b border-border p-5">
+        <CardHeader className="border-b border-border p-4">
           <CardTitle className="font-bold text-foreground flex items-center gap-2 text-sm">
             <ShoppingCart className="h-4 w-4 text-primary" /> Orden de Venta
           </CardTitle>
         </CardHeader>
         
-        <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
+        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-primary/40 py-20">
               <ShoppingCart className="h-20 w-20 mb-4 opacity-50" />
@@ -298,38 +332,6 @@ export default function Ventas() {
 
         {/* CIERRE DE VENTA */}
         <div className="p-5 bg-muted/50 border-t border-border space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-[10px] font-medium uppercase text-muted-foreground ml-1">Cliente</Label>
-              <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger className="rounded-xl border-primary/10 h-10 bg-background font-bold text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {(clients || []).map((c: any) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[11px] font-black uppercase text-slate-800 ml-1">Forma de Pago</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger className="rounded-xl border-primary/10 h-10 bg-background font-bold text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {PAYMENT_METHODS.map(m => {
-                    const Icon = m.icon;
-                    return (
-                    <SelectItem key={m.id} value={m.id} className="text-xs font-bold uppercase">
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-3 w-3" /> {m.label}
-                      </div>
-                    </SelectItem>
-                  )})}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
           <div className="space-y-2 pt-3 border-t border-border">
             <div className="flex justify-between items-center text-muted-foreground text-xs">
@@ -348,7 +350,7 @@ export default function Ventas() {
 
           <Button 
             onClick={handleCheckout}
-            disabled={cart.length === 0 || createSale.isPending || (paymentMethod === 'credito' && clientId === "1")}
+            disabled={cart.length === 0 || createSale.isPending || (paymentMethod === 'credito' && clientId === "general")}
             className="w-full h-16 rounded-3xl bg-primary text-lg font-black shadow-xl shadow-primary/20 group active:scale-95 transition-all"
           >
             {createSale.isPending ? "PROCESANDO..." : (
@@ -364,10 +366,40 @@ export default function Ventas() {
 
       <TabsContent value="historial" className="m-0">
         <Card className="border-primary/10 shadow-xl rounded-3xl overflow-hidden bg-admin-panel backdrop-blur-sm">
-          <CardHeader className="bg-primary/5 border-b border-primary/5 p-6">
+          <CardHeader className="bg-primary/5 border-b border-primary/5 p-6 flex flex-row items-center justify-between">
             <CardTitle className="font-black text-primary uppercase flex items-center gap-2">
               <Banknote className="h-5 w-5" /> Registro Histórico
             </CardTitle>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                if (!salesHistory) return;
+                const csvData = [
+                  ["ID", "Cliente", "Fecha", "Metodo Pago", "Estado", "Total"],
+                  ...salesHistory.map(s => [
+                    s.id,
+                    s.clientName || "Cliente General",
+                    new Date(s.createdAt).toLocaleString('es-ES'),
+                    s.paymentMethod,
+                    s.status === 'paid' ? 'Pagado' : 'Pendiente',
+                    s.finalTotal
+                  ])
+                ].map(e => e.join(",")).join("\n");
+                
+                const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `Ventas_BeautyCenter_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+              className="font-black text-xs uppercase bg-white border-primary/20 hover:bg-primary/5"
+            >
+              ⬇️ Descargar Excel (CSV)
+            </Button>
           </CardHeader>
           <CardContent className="p-0">
             {loadingSales ? (

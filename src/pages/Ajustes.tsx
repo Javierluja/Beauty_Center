@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Settings, User, Bell, Shield, Palette, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { trpc } from "@/providers/trpc";
 
 export default function Ajustes() {
   const { user } = useAuth();
@@ -16,22 +17,37 @@ export default function Ajustes() {
     email: user?.email || "",
   });
   
+  const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" });
+  
+  const changePwd = trpc.user.changePassword.useMutation({
+    onSuccess: () => {
+      toast({ title: "Contraseña actualizada 🔒", description: "Tu seguridad ha sido reforzada." });
+      setPasswords({ currentPassword: "", newPassword: "" });
+    },
+    onError: (err) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  });
+  
   // Estados para interruptores
   const [opts, setOpts] = useState({
-    darkMode: true, // Por defecto oscuro
+    darkMode: localStorage.getItem('theme') !== 'light',
     animations: true,
     whatsapp: true,
     report: false
   });
 
-  // Efecto real para el modo oscuro
-  useEffect(() => {
-    if (opts.darkMode) {
+  const toggleTheme = () => {
+    const newDarkMode = !opts.darkMode;
+    setOpts({ ...opts, darkMode: newDarkMode });
+    if (newDarkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
-  }, [opts.darkMode]);
+  };
 
   return (
     <div className="space-y-6">
@@ -85,7 +101,7 @@ export default function Ajustes() {
               <CardContent className="p-8 space-y-6">
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <Label className="text-[11px] font-black uppercase text-slate-900 ml-1 tracking-widest">Nombre de Usuario</Label>
+                    <Label className="text-[11px] font-black uppercase text-foreground ml-1 tracking-widest">Nombre de Usuario</Label>
                     <Input 
                       value={form.name} 
                       onChange={(e) => setForm({...form, name: e.target.value})} 
@@ -93,7 +109,7 @@ export default function Ajustes() {
                     />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-[11px] font-black uppercase text-slate-900 ml-1 tracking-widest">Email</Label>
+                    <Label className="text-[11px] font-black uppercase text-foreground ml-1 tracking-widest">Email</Label>
                     <Input 
                       value={form.email} 
                       disabled 
@@ -117,9 +133,9 @@ export default function Ajustes() {
           )}
 
           {activeTab === "apariencia" && (
-            <Card className="border-2 border-primary/10 shadow-2xl rounded-[2.5rem] overflow-hidden bg-admin-panel animate-in fade-in slide-in-from-right-4 duration-300">
-              <CardHeader className="bg-slate-100 border-b-2 border-slate-200 p-8">
-                <CardTitle className="font-black text-slate-900 uppercase flex items-center gap-2 tracking-tight">
+            <Card className="border border-border shadow-2xl rounded-[2.5rem] overflow-hidden bg-card animate-in fade-in slide-in-from-right-4 duration-300">
+              <CardHeader className="bg-muted/30 border-b border-border p-8">
+                <CardTitle className="font-black text-foreground uppercase flex items-center gap-2 tracking-tight">
                   <Palette className="h-6 w-6 text-primary" /> Apariencia Visual
                 </CardTitle>
               </CardHeader>
@@ -127,26 +143,26 @@ export default function Ajustes() {
                 <div className="space-y-5">
                   <div className="flex items-center justify-between p-4 border border-border rounded-xl bg-muted/20 hover:border-primary/20 transition-all">
                     <div>
-                      <p className="font-black uppercase text-slate-900 text-sm tracking-tight">Modo Oscuro</p>
-                      <p className="text-[10px] text-slate-500 uppercase font-black tracking-[0.15em] mt-1 italic">Activar tema oscuro para la aplicación</p>
+                      <p className="font-black uppercase text-foreground text-sm tracking-tight">Modo Oscuro</p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.15em] mt-1 italic">Activar tema oscuro para la aplicación</p>
                     </div>
                     <div 
-                      onClick={() => setOpts({ ...opts, darkMode: !opts.darkMode })}
-                      className={`h-7 w-14 rounded-full cursor-pointer relative transition-colors duration-300 shadow-inner ${opts.darkMode ? 'bg-primary' : 'bg-slate-300'}`}
+                      onClick={toggleTheme}
+                      className={`h-7 w-14 rounded-full cursor-pointer relative transition-colors duration-300 shadow-inner ${opts.darkMode ? 'bg-primary' : 'bg-muted-foreground/30'}`}
                     >
-                      <div className={`h-5 w-5 bg-white rounded-full absolute top-1 shadow-md transition-transform duration-300 ${opts.darkMode ? 'translate-x-8' : 'translate-x-1'}`}></div>
+                      <div className={`h-5 w-5 bg-background rounded-full absolute top-1 shadow-md transition-transform duration-300 ${opts.darkMode ? 'translate-x-8' : 'translate-x-1'}`}></div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-5 border-2 border-slate-100 rounded-3xl bg-slate-100/50 hover:border-primary/20 transition-all">
+                  <div className="flex items-center justify-between p-5 border border-border rounded-3xl bg-muted/20 hover:border-primary/20 transition-all">
                     <div>
-                      <p className="font-black uppercase text-slate-900 text-sm tracking-tight">Animaciones UI</p>
-                      <p className="text-[10px] text-slate-500 uppercase font-black tracking-[0.15em] mt-1 italic">Habilitar transiciones fluidas</p>
+                      <p className="font-black uppercase text-foreground text-sm tracking-tight">Animaciones UI</p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.15em] mt-1 italic">Habilitar transiciones fluidas</p>
                     </div>
                     <div 
                       onClick={() => setOpts({ ...opts, animations: !opts.animations })}
-                      className={`h-6 w-12 rounded-full cursor-pointer relative transition-colors duration-300 ${opts.animations ? 'bg-primary' : 'bg-slate-200'}`}
+                      className={`h-6 w-12 rounded-full cursor-pointer relative transition-colors duration-300 ${opts.animations ? 'bg-primary' : 'bg-muted-foreground/30'}`}
                     >
-                      <div className={`h-4 w-4 bg-white rounded-full absolute top-1 shadow-sm transition-transform duration-300 ${opts.animations ? 'translate-x-7' : 'translate-x-1'}`}></div>
+                      <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform duration-300 ${opts.animations ? 'translate-x-7' : 'translate-x-1'}`}></div>
                     </div>
                   </div>
                 </div>
@@ -160,9 +176,9 @@ export default function Ajustes() {
           )}
 
           {activeTab === "notificaciones" && (
-            <Card className="border-2 border-primary/10 shadow-2xl rounded-[2.5rem] overflow-hidden bg-admin-panel animate-in fade-in slide-in-from-right-4 duration-300">
-              <CardHeader className="bg-slate-100 border-b-2 border-slate-200 p-8">
-                <CardTitle className="font-black text-slate-900 uppercase flex items-center gap-2 tracking-tight">
+            <Card className="border border-border shadow-2xl rounded-[2.5rem] overflow-hidden bg-card animate-in fade-in slide-in-from-right-4 duration-300">
+              <CardHeader className="bg-muted/30 border-b border-border p-8">
+                <CardTitle className="font-black text-foreground uppercase flex items-center gap-2 tracking-tight">
                   <Bell className="h-6 w-6 text-primary" /> Configuración de Alertas
                 </CardTitle>
               </CardHeader>
@@ -175,21 +191,21 @@ export default function Ajustes() {
                     </div>
                     <div 
                       onClick={() => setOpts({ ...opts, whatsapp: !opts.whatsapp })}
-                      className={`h-6 w-12 rounded-full cursor-pointer relative transition-colors duration-300 ${opts.whatsapp ? 'bg-primary' : 'bg-slate-300'}`}
+                      className={`h-6 w-12 rounded-full cursor-pointer relative transition-colors duration-300 ${opts.whatsapp ? 'bg-primary' : 'bg-muted-foreground/30'}`}
                     >
-                      <div className={`h-4 w-4 bg-white rounded-full absolute top-1 shadow-sm transition-transform duration-300 ${opts.whatsapp ? 'translate-x-7' : 'translate-x-1'}`}></div>
+                      <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform duration-300 ${opts.whatsapp ? 'translate-x-7' : 'translate-x-1'}`}></div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-5 border border-primary/20 rounded-2xl bg-white shadow-sm">
+                  <div className="flex items-center justify-between p-5 border border-primary/20 rounded-2xl bg-card shadow-sm">
                     <div>
                       <p className="font-black uppercase text-primary text-sm">Resumen Diario</p>
-                      <p className="text-xs text-slate-600 uppercase font-bold tracking-tight mt-1">Recibir reporte de ventas por la mañana</p>
+                      <p className="text-xs text-muted-foreground uppercase font-bold tracking-tight mt-1">Recibir reporte de ventas por la mañana</p>
                     </div>
                     <div 
                       onClick={() => setOpts({ ...opts, report: !opts.report })}
-                      className={`h-6 w-12 rounded-full cursor-pointer relative transition-colors duration-300 ${opts.report ? 'bg-primary' : 'bg-slate-300'}`}
+                      className={`h-6 w-12 rounded-full cursor-pointer relative transition-colors duration-300 ${opts.report ? 'bg-primary' : 'bg-muted-foreground/30'}`}
                     >
-                      <div className={`h-4 w-4 bg-white rounded-full absolute top-1 shadow-sm transition-transform duration-300 ${opts.report ? 'translate-x-7' : 'translate-x-1'}`}></div>
+                      <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform duration-300 ${opts.report ? 'translate-x-7' : 'translate-x-1'}`}></div>
                     </div>
                   </div>
                 </div>
@@ -203,26 +219,26 @@ export default function Ajustes() {
           )}
 
           {activeTab === "seguridad" && (
-            <Card className="border-2 border-primary/10 shadow-2xl rounded-[2.5rem] overflow-hidden bg-admin-panel animate-in fade-in slide-in-from-right-4 duration-300">
-              <CardHeader className="bg-slate-100 border-b-2 border-slate-200 p-8">
-                <CardTitle className="font-black text-slate-900 uppercase flex items-center gap-2 tracking-tight">
+            <Card className="border border-border shadow-2xl rounded-[2.5rem] overflow-hidden bg-card animate-in fade-in slide-in-from-right-4 duration-300">
+              <CardHeader className="bg-muted/30 border-b border-border p-8">
+                <CardTitle className="font-black text-foreground uppercase flex items-center gap-2 tracking-tight">
                   <Shield className="h-6 w-6 text-primary" /> Privacidad y Accesos
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <Label className="text-[11px] font-black uppercase text-slate-900 ml-1 tracking-widest">Contraseña Actual</Label>
-                    <Input type="password" placeholder="••••••••" className="rounded-xl border-2 border-slate-100 h-14 font-black text-slate-900 bg-slate-50 focus:border-primary transition-all" />
+                    <Label className="text-[11px] font-black uppercase text-foreground ml-1 tracking-widest">Contraseña Actual</Label>
+                    <Input type="password" value={passwords.currentPassword} onChange={e => setPasswords({...passwords, currentPassword: e.target.value})} placeholder="••••••••" className="rounded-xl border border-border h-14 font-black text-foreground bg-muted/20 focus:border-primary transition-all" />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-[11px] font-black uppercase text-slate-900 ml-1 tracking-widest">Nueva Contraseña</Label>
-                    <Input type="password" placeholder="••••••••" className="rounded-xl border-2 border-slate-100 h-14 font-black text-slate-900 bg-slate-50 focus:border-primary transition-all" />
+                    <Label className="text-[11px] font-black uppercase text-foreground ml-1 tracking-widest">Nueva Contraseña</Label>
+                    <Input type="password" value={passwords.newPassword} onChange={e => setPasswords({...passwords, newPassword: e.target.value})} placeholder="••••••••" className="rounded-xl border border-border h-14 font-black text-foreground bg-muted/20 focus:border-primary transition-all" />
                   </div>
                 </div>
                 <div className="pt-6 border-t border-primary/5 flex items-center justify-between">
-                  <Button onClick={() => toast({ title: "Contraseña actualizada 🔒", description: "Tu seguridad ha sido reforzada." })} className="bg-primary hover:bg-primary/90 font-black h-14 px-8 rounded-2xl shadow-xl shadow-primary/20 uppercase group">
-                    Actualizar Contraseña
+                  <Button disabled={changePwd.isPending || !passwords.currentPassword || !passwords.newPassword} onClick={() => changePwd.mutate(passwords)} className="bg-primary hover:bg-primary/90 font-black h-14 px-8 rounded-2xl shadow-xl shadow-primary/20 uppercase group">
+                    {changePwd.isPending ? "Actualizando..." : "Actualizar Contraseña"}
                   </Button>
                   <Button variant="ghost" className="text-destructive font-black text-xs uppercase hover:bg-destructive/10">Cerrar Sesión en otros dispositivos</Button>
                 </div>

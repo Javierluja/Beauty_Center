@@ -17,6 +17,7 @@ export const users = mysqlTable("users", {
   password: varchar("password", { length: 255 }).notNull(),
   avatar: varchar("avatar", { length: 500 }),
   role: varchar("role", { length: 50 }).notNull().default("ventas"),
+  permissions: text("permissions"), // Store JSON string here
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -27,6 +28,7 @@ export const customers = mysqlTable("customers", {
   phone: varchar("phone", { length: 50 }).notNull(),
   email: varchar("email", { length: 255 }),
   notes: text("notes"),
+  balance: decimal("balance", { precision: 10, scale: 2 }).default("0.00").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

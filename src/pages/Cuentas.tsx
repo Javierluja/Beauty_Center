@@ -13,7 +13,9 @@ import {
   Calendar,
   DollarSign,
   AlertCircle,
+  Gift,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Cuentas() {
@@ -24,6 +26,16 @@ export default function Cuentas() {
 
   const { data: unpaidSales, isLoading } = trpc.sale.list.useQuery({ 
     status: 'pending' 
+  });
+  
+  const { data: clients, isLoading: loadingClients } = trpc.customers.list.useQuery();
+  const [giftBalances, setGiftBalances] = useState<Record<number, string>>({});
+
+  const addGiftBalance = trpc.customers.addBalance.useMutation({
+    onSuccess: () => {
+      utils.customers.list.invalidate();
+      toast({ title: "Saldo agregado 🎁", description: "El cliente ahora tiene saldo a favor." });
+    }
   });
 
   const markAsPaid = trpc.sale.updateStatus.useMutation({
@@ -66,17 +78,28 @@ export default function Cuentas() {
         </Card>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
-        <Input 
-          placeholder="Buscar deudor..." 
-          value={search} 
-          onChange={(e) => setSearch(e.target.value)} 
-          className="pl-12 h-14 rounded-2xl border-2 border-primary/20 bg-admin-panel shadow-lg font-black text-slate-800 placeholder:text-slate-400" 
-        />
-      </div>
+      <Tabs defaultValue="deudas" className="w-full">
+        <TabsList className="bg-muted p-1.5 h-14 rounded-2xl w-full max-w-[500px] grid grid-cols-2 mb-8 border border-border mx-auto md:mx-0">
+          <TabsTrigger value="deudas" className="rounded-xl font-black text-xs uppercase data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all">
+            Cuentas por Cobrar
+          </TabsTrigger>
+          <TabsTrigger value="giftcards" className="rounded-xl font-black text-xs uppercase data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md transition-all">
+            Giftcards / Saldos a favor
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-4">
+        <TabsContent value="deudas" className="space-y-6 m-0">
+          <div className="relative max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
+            <Input 
+              placeholder="Buscar deudor..." 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+              className="pl-12 h-14 rounded-2xl border-2 border-primary/20 bg-admin-panel shadow-lg font-black text-slate-800 placeholder:text-slate-400" 
+            />
+          </div>
+
+          <div className="grid gap-4">
         {isLoading ? [1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-3xl" />) : 
           filteredSales?.length === 0 ? (
             <div className="py-24 text-center bg-slate-100 rounded-[3rem] border-2 border-dashed border-slate-200">
@@ -150,7 +173,67 @@ export default function Cuentas() {
             ))
           )
         }
-      </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="giftcards" className="space-y-6 m-0">
+          <div className="relative max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
+            <Input 
+              placeholder="Buscar cliente para agregar saldo..." 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+              className="pl-12 h-14 rounded-2xl border-2 border-primary/20 bg-admin-panel shadow-lg font-black text-slate-800 placeholder:text-slate-400" 
+            />
+          </div>
+          
+          <div className="grid gap-4">
+            {loadingClients ? [1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-3xl" />) : 
+              clients?.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).map(client => (
+                <Card key={client.id} className="border-2 border-primary/10 rounded-[2.5rem] shadow-xl hover:border-primary transition-all bg-admin-panel group overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="flex flex-col md:flex-row md:items-center">
+                      <div className="p-6 flex-1 flex items-center gap-4">
+                        <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                          <Gift className="h-8 w-8" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-slate-900 text-2xl uppercase leading-none mb-2 tracking-tight">{client.name}</h3>
+                          <Badge variant="outline" className="text-[10px] font-black h-6 px-3 border-slate-200 text-slate-600 flex items-center gap-2 uppercase bg-slate-100">
+                            Saldo Actual: ${Number(client.balance || 0).toLocaleString()}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="bg-primary/5 md:bg-transparent p-8 flex flex-col md:flex-row items-center justify-between gap-8 border-t-2 md:border-t-0 border-primary/10 w-full md:w-auto">
+                        <div className="flex items-center gap-2 w-full md:w-auto">
+                          <Input 
+                            type="number" 
+                            placeholder="Monto Giftcard" 
+                            className="w-40 h-12 rounded-xl border-2 border-primary/20 font-black text-lg focus:border-primary transition-all bg-white"
+                            value={giftBalances[client.id] || ""}
+                            onChange={(e) => setGiftBalances({ ...giftBalances, [client.id]: e.target.value })}
+                          />
+                          <Button 
+                            onClick={() => {
+                              if (!giftBalances[client.id]) return;
+                              addGiftBalance.mutate({ id: client.id, amountToAdd: Number(giftBalances[client.id]) });
+                              setGiftBalances({ ...giftBalances, [client.id]: "" });
+                            }}
+                            disabled={addGiftBalance.isPending || !giftBalances[client.id]}
+                            className="bg-primary hover:bg-primary/90 text-white font-black rounded-xl h-12 px-6 shadow-xl uppercase text-xs tracking-widest"
+                          >
+                            Añadir Saldo
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

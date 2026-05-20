@@ -51,6 +51,7 @@ export async function updateClient(
     phone?: string;
     email?: string;
     notes?: string;
+    balance?: string;
   }
 ) {
   const db = getDb();

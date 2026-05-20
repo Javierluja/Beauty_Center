@@ -26,9 +26,26 @@ export const customerRouter = createRouter({
         notes: z.string().optional().default(""),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       console.log("[API] Creando cliente:", input.name);
-      return createClient(input);
+      const client = await createClient(input);
+      
+      try {
+        if (client) {
+          fetch("https://script.google.com/macros/s/AKfycbz_Xa916OIVWUyKwhpM4K73vntd0kaxgtuGuOG8fTdkkwg9mHAzLM9yLbhDU1i5z9c_Dg/exec", {
+            method: "POST",
+            body: JSON.stringify({
+              tipo: "cliente",
+              id: client.id,
+              nombre: client.name,
+              telefono: client.phone,
+              fecha: new Date().toLocaleString('es-ES')
+            })
+          }).catch(e => console.error(e));
+        }
+      } catch(e) {}
+      
+      return client;
     }),
 
   update: authedQuery
@@ -49,6 +66,21 @@ export const customerRouter = createRouter({
   delete: adminQuery
     .input(z.number())
     .mutation(({ input }) => deleteClient(input)),
+
+  addBalance: authedQuery
+    .input(
+      z.object({
+        id: z.number(),
+        amountToAdd: z.number(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const client = await findClientById(input.id);
+      if (!client) throw new Error("Cliente no encontrado");
+      const currentBalance = Number(client.balance || 0);
+      const newBalance = currentBalance + input.amountToAdd;
+      return updateClient(input.id, { balance: newBalance.toString() });
+    }),
 });
 
 

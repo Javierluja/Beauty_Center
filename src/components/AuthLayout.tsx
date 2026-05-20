@@ -31,19 +31,19 @@ import { AuthLayoutSkeleton } from "./AuthLayoutSkeleton";
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard",  path: "/" },
-  { icon: CalendarDays,    label: "Agenda",     path: "/agenda" },
-  { icon: ShoppingCart,   label: "Ventas",      path: "/ventas" },
-  { icon: ShoppingBag,    label: "Compras",     path: "/compras" },
-  { icon: Sparkles,       label: "Sesiones",    path: "/sesiones" },
-  { icon: Scissors,       label: "Servicios",   path: "/servicios" },
-  { icon: Wallet,         label: "Cuentas",     path: "/cuentas" },
-  { icon: Users,          label: "Clientes",    path: "/clientes" },
-  { icon: Package,        label: "Productos",   path: "/productos" },
-  { icon: Receipt,        label: "Gastos",      path: "/gastos" },
-  { icon: ShieldCheck,    label: "Personal",    path: "/personal", adminOnly: true },
-  { icon: Settings,       label: "Ajustes",     path: "/ajustes" },
-  { icon: Bell,           label: "Avisos",      path: "/notificaciones" },
+  { icon: LayoutDashboard, label: "Dashboard",  path: "/", permKey: "dashboard" },
+  { icon: CalendarDays,    label: "Agenda",     path: "/agenda", permKey: "agenda" },
+  { icon: Bell,           label: "Avisos",      path: "/notificaciones", permKey: "avisos" },
+  { icon: ShoppingCart,   label: "Ventas",      path: "/ventas", permKey: "ventas" },
+  { icon: ShoppingBag,    label: "Compras",     path: "/compras", permKey: "compras" },
+  { icon: Sparkles,       label: "Sesiones",    path: "/sesiones", permKey: "sesiones" },
+  { icon: Package,        label: "Productos",   path: "/productos", permKey: "productos" },
+  { icon: Scissors,       label: "Servicios",   path: "/servicios", permKey: "servicios" },
+  { icon: Wallet,         label: "Cuentas",     path: "/cuentas", permKey: "cuentas" },
+  { icon: Users,          label: "Clientes",    path: "/clientes", permKey: "clientes" },
+  { icon: Receipt,        label: "Gastos",      path: "/gastos", permKey: "gastos" },
+  { icon: ShieldCheck,    label: "Personal",    path: "/personal", permKey: "personal" },
+  { icon: Settings,       label: "Ajustes",     path: "/ajustes", permKey: "ajustes" },
 ];
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
@@ -71,7 +71,20 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  const filteredMenu = menuItems.filter(item => !item.adminOnly || user.role === 'admin_pro');
+  let userPerms: Record<string, boolean> = {};
+  try {
+    if (user.permissions) {
+      userPerms = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
+    }
+  } catch (e) {}
+
+  const filteredMenu = menuItems.filter(item => {
+    if (user.role === 'admin_pro') return true;
+    // Si no es admin_pro, verificamos sus permisos (por defecto true excepto si explícitamente es false)
+    if (item.permKey === 'personal') return false; // Personal siempre bloqueado para no-admins por seguridad extra
+    if (userPerms[item.permKey] === false) return false;
+    return true;
+  });
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">

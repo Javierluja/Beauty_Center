@@ -22,13 +22,31 @@ export const expenseRouter = createRouter({
     )
     .mutation(async ({ input }) => {
       const db = getDb();
-      return await db.insert(expenses).values({
+      const result = await db.insert(expenses).values({
         description: input.description,
         amount: input.amount,
         category: input.category,
         date: input.date,
         notes: input.notes,
       });
+      
+      const insertId = (result as any)[0].insertId;
+      
+      try {
+        fetch("https://script.google.com/macros/s/AKfycbz_Xa916OIVWUyKwhpM4K73vntd0kaxgtuGuOG8fTdkkwg9mHAzLM9yLbhDU1i5z9c_Dg/exec", {
+          method: "POST",
+          body: JSON.stringify({
+            tipo: "gasto",
+            id: insertId,
+            descripcion: input.description,
+            categoria: input.category,
+            monto: input.amount,
+            fecha: input.date
+          })
+        }).catch(e => console.error(e));
+      } catch (e) {}
+
+      return result;
     }),
 
   delete: adminProQuery

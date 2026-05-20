@@ -79,9 +79,25 @@ export const saleRouter = createRouter({
     .mutation(async ({ input, ctx }) => {
       const { items, ...saleData } = input;
       
-      // Calcular totales si no vienen (por simplicidad en el front)
       const subtotal = items.reduce((acc, i) => acc + (Number(i.unitPrice) * i.quantity), 0);
       const finalTotal = subtotal - Number(saleData.discount || 0);
+
+      // --- LOGIC PARA GIFTCARD ---
+      if (saleData.paymentMethod === 'gift_card') {
+        if (!saleData.clientId) {
+          throw new Error("El pago con Gift Card requiere un cliente registrado.");
+        }
+        const { findClientById, updateClient } = await import("./queries/clients.js");
+        const client = await findClientById(saleData.clientId);
+        if (!client) throw new Error("Cliente no encontrado.");
+        
+        const currentBalance = Number(client.balance || 0);
+        if (currentBalance < finalTotal) {
+          throw new Error(`Saldo insuficiente. El cliente solo tiene $${currentBalance.toLocaleString()} a favor.`);
+        }
+        
+        await updateClient(saleData.clientId, { balance: (currentBalance - finalTotal).toString() });
+      }
 
       const sale = await createSale({
         ...saleData,
@@ -97,6 +113,30 @@ export const saleRouter = createRouter({
             ...item,
             totalPrice: (Number(item.unitPrice) * item.quantity).toString()
           });
+        }
+        
+        // --- WEBHOOK A GOOGLE SHEETS ---
+        try {
+          let clientName = "Cliente General";
+          if (saleData.clientId) {
+            const { findClientById } = await import("./queries/clients.js");
+            const c = await findClientById(saleData.clientId);
+            if (c) clientName = c.name;
+          }
+          
+          fetch("https://script.google.com/macros/s/AKfycbz_Xa916OIVWUyKwhpM4K73vntd0kaxgtuGuOG8fTdkkwg9mHAzLM9yLbhDU1i5z9c_Dg/exec", {
+            method: "POST",
+            body: JSON.stringify({
+              tipo: "venta",
+              id: sale.id,
+              cliente: clientName,
+              total: finalTotal.toString(),
+              metodo: saleData.paymentMethod,
+              fecha: new Date().toLocaleString('es-ES')
+            })
+          }).catch(err => console.error("[Webhook Error]:", err));
+        } catch (e) {
+          console.error("[Webhook Error] Could not send data to Google Sheets", e);
         }
       }
 
