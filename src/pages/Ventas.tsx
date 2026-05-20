@@ -15,6 +15,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Search,
   ShoppingCart,
   Minus,
@@ -48,11 +54,13 @@ export default function Ventas() {
   const [clientId, setClientId] = useState<string>("general");
   const [paymentMethod, setPaymentMethod] = useState<string>("contado");
   const [discount, setDiscount] = useState("0");
+  const [viewingSaleId, setViewingSaleId] = useState<number | null>(null);
 
   const { data: services, isLoading: loadingServices } = trpc.service.list.useQuery({ active: true });
   const { data: products, isLoading: loadingProducts } = trpc.product.list.useQuery();
   const { data: clients } = trpc.customers.list.useQuery();
   const { data: salesHistory, isLoading: loadingSales } = trpc.sale.list.useQuery();
+  const { data: saleItems, isLoading: loadingItems } = trpc.sale.getItems.useQuery(viewingSaleId || 0, { enabled: !!viewingSaleId });
 
   const groupedServices = useMemo(() => {
     const filtered = (services || []).filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -413,7 +421,11 @@ export default function Ventas() {
             ) : (
               <div className="divide-y divide-primary/5 max-h-[calc(100vh-250px)] overflow-y-auto no-scrollbar">
                 {salesHistory.map((sale) => (
-                  <div key={sale.id} className="p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-accent transition-colors">
+                  <div 
+                    key={sale.id} 
+                    onClick={() => setViewingSaleId(sale.id)}
+                    className="p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-accent transition-colors cursor-pointer"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                         <ShoppingCart className="h-6 w-6" />
@@ -452,6 +464,83 @@ export default function Ventas() {
         </Card>
       </TabsContent>
     </Tabs>
+
+      <Dialog open={!!viewingSaleId} onOpenChange={(open) => !open && setViewingSaleId(null)}>
+        <DialogContent className="max-w-md rounded-2xl border-border bg-card">
+          <DialogHeader>
+            <DialogTitle className="font-black text-primary uppercase flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" /> Detalle de Venta #{viewingSaleId}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {salesHistory?.find(s => s.id === viewingSaleId) && (() => {
+            const viewingSale = salesHistory.find(s => s.id === viewingSaleId)!;
+            return (
+              <div className="space-y-4 pt-2">
+                <div className="bg-muted/50 p-4 rounded-xl space-y-2 border border-border">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground font-semibold uppercase">Cliente:</span>
+                    <span className="text-foreground font-black uppercase">{viewingSale.clientName || "Cliente General"}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground font-semibold uppercase">Fecha:</span>
+                    <span className="text-foreground font-medium">{new Date(viewingSale.createdAt).toLocaleString('es-ES')}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground font-semibold uppercase">Método de Pago:</span>
+                    <span className="text-foreground font-black uppercase">{viewingSale.paymentMethod}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground font-semibold uppercase">Estado:</span>
+                    <Badge className={`uppercase font-black text-[9px] border-none ${viewingSale.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {viewingSale.status === 'paid' ? 'Pagado' : 'Pendiente'}
+                    </Badge>
+                  </div>
+                  {viewingSale.notes && (
+                    <div className="pt-2 border-t border-border mt-1">
+                      <p className="text-[10px] text-muted-foreground font-semibold uppercase">Notas:</p>
+                      <p className="text-xs text-foreground italic mt-0.5">{viewingSale.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest ml-1">Ítems Vendidos</p>
+                  {loadingItems ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-10 w-full rounded-lg" />
+                      <Skeleton className="h-10 w-full rounded-lg" />
+                    </div>
+                  ) : !saleItems || saleItems.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic ml-1">No hay detalles disponibles.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto no-scrollbar">
+                      {saleItems.map((item: any) => (
+                        <div key={item.id} className="flex justify-between items-center bg-muted/30 p-2.5 rounded-lg border border-border text-xs">
+                          <div>
+                            <p className="font-black text-foreground uppercase">{item.name}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase">{item.type === 'product' ? 'Producto' : 'Servicio'} · {item.quantity} x ${Number(item.unitPrice).toLocaleString()}</p>
+                          </div>
+                          <span className="font-black text-primary">${Number(item.totalPrice).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 border-t border-border flex justify-between items-center text-primary text-xl font-black uppercase tracking-tighter">
+                  <span>Total Final</span>
+                  <span>${Number(viewingSale.finalTotal).toLocaleString()}</span>
+                </div>
+                
+                <Button onClick={() => setViewingSaleId(null)} className="w-full bg-primary hover:bg-primary/90 font-bold h-11 rounded-xl shadow-lg uppercase text-xs">
+                  Cerrar Detalle
+                </Button>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

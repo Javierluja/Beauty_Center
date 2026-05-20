@@ -165,4 +165,13 @@ export async function getDailyPaymentMethods() {
     .groupBy(sales.paymentMethod);
 }
 
+export async function findSaleItems(saleId: number) {
+  const db = getDb();
+  return await db
+    .select()
+    .from(saleItems)
+    .where(eq(saleItems.saleId, saleId));
+}
+
+
 

@@ -9,6 +9,7 @@ import {
   getDailyPaymentMethods,
   updateSaleStatus,
   updateSaleAbono,
+  findSaleItems,
 } from "./queries/sales.js";
 import { getDailySummary } from "./queries/expenses.js"; // Importación verificada
 
@@ -113,6 +114,11 @@ export const saleRouter = createRouter({
             ...item,
             totalPrice: (Number(item.unitPrice) * item.quantity).toString()
           });
+
+          if (item.type === 'product') {
+            const { updateProductStock } = await import("./queries/products.js");
+            await updateProductStock(item.itemId, -item.quantity);
+          }
         }
         
         // --- WEBHOOK A GOOGLE SHEETS ---
@@ -146,6 +152,10 @@ export const saleRouter = createRouter({
   byId: authedQuery
     .input(z.number())
     .query(({ input }) => findSaleById(input)),
+
+  getItems: authedQuery
+    .input(z.number())
+    .query(({ input }) => findSaleItems(input)),
 });
 
 
