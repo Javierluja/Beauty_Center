@@ -126,37 +126,37 @@ export default function Personal() {
         {isLoading ? [1, 2].map(i => <Skeleton key={i} className="h-40 w-full rounded-3xl" />) : 
           users?.map(user => (
             <Card key={user.id} className="border border-border rounded-2xl shadow-lg hover:border-primary/40 transition-all bg-card group overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform">
-                      <UserCircle className="h-8 w-8" />
+              <CardContent className="p-5 md:p-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+                      <UserCircle className="h-7 w-7 md:h-8 md:w-8" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-black text-slate-900 text-xl uppercase truncate leading-none mb-2 tracking-tight">{user.name}</h3>
-                      <p className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-2 truncate bg-slate-100 px-2 py-1 rounded-lg w-fit border border-slate-200">
-                        <Mail className="h-3 w-3 text-primary" /> {user.email}
+                      <h3 className="font-black text-foreground text-lg md:text-xl uppercase truncate leading-none mb-1 md:mb-2 tracking-tight">{user.name}</h3>
+                      <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1.5 truncate bg-muted px-2 py-1 rounded-lg w-fit border border-border">
+                        <Mail className="h-3 w-3 text-primary shrink-0" /> <span className="truncate">{user.email}</span>
                       </p>
                     </div>
                   </div>
-                  <Badge className={`border-none font-bold text-[9px] h-5 uppercase shrink-0 ${user.role === 'admin_pro' ? 'bg-primary text-primary-foreground' : user.role === 'admin' ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground'}`}>
+                  <Badge className={`border-none font-bold text-[9px] h-5 px-1.5 md:px-2.5 uppercase shrink-0 ${user.role === 'admin_pro' ? 'bg-primary text-primary-foreground' : user.role === 'admin' ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground'}`}>
                     {user.role === 'admin_pro' ? 'Admin Pro' : user.role === 'admin' ? 'Administrador' : 'Ventas'}
                   </Badge>
                 </div>
                 
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
-                  <p className="text-[10px] text-muted-foreground">Acceso Habilitado</p>
+                <div className="flex items-center justify-between mt-5 pt-4 border-t border-border">
+                  <p className="text-[9px] md:text-[10px] text-muted-foreground font-semibold">Acceso Habilitado</p>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => { 
                       setPermUserId(user.id); 
                       const p = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
-                      setPerms(p || { gastos: true, productos: true, compras: true, agenda: true, avisos: true, ventas: true, sesiones: true, personal: false }); 
+                      setPerms(p || { gastos: true, productos: true, compras: true, agenda: true, avisos: true, ventas: true, sesiones: true, cuentas: true, clientes: true, personal: false }); 
                       setPermDialogOpen(true); 
-                    }} className="h-10 px-4 rounded-xl text-xs font-bold uppercase">
+                    }} className="h-9 md:h-10 px-3 md:px-4 rounded-xl text-[10px] md:text-xs font-bold uppercase border-primary/20 hover:bg-primary/5 text-primary">
                       Permisos
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => { if(confirm("¿Quitar acceso a este usuario?")) deleteMutation.mutate(user.id) }} className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl border border-destructive/10">
-                      <Trash2 className="h-5 w-5" />
+                    <Button variant="ghost" size="icon" onClick={() => { if(confirm("¿Quitar acceso a este usuario?")) deleteMutation.mutate(user.id) }} className="h-9 w-9 md:h-10 md:w-10 text-destructive hover:bg-destructive/10 rounded-xl border border-destructive/10">
+                      <Trash2 className="h-4 w-4 md:h-5 md:w-5" />
                     </Button>
                   </div>
                 </div>
