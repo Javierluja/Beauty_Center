@@ -196,18 +196,7 @@ export default function Ajustes() {
                       <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform duration-300 ${opts.whatsapp ? 'translate-x-7' : 'translate-x-1'}`}></div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-5 border border-primary/20 rounded-2xl bg-card shadow-sm">
-                    <div>
-                      <p className="font-black uppercase text-primary text-sm">Resumen Diario</p>
-                      <p className="text-xs text-muted-foreground uppercase font-bold tracking-tight mt-1">Recibir reporte de ventas por la mañana</p>
-                    </div>
-                    <div 
-                      onClick={() => setOpts({ ...opts, report: !opts.report })}
-                      className={`h-6 w-12 rounded-full cursor-pointer relative transition-colors duration-300 ${opts.report ? 'bg-primary' : 'bg-muted-foreground/30'}`}
-                    >
-                      <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform duration-300 ${opts.report ? 'translate-x-7' : 'translate-x-1'}`}></div>
-                    </div>
-                  </div>
+
                 </div>
                 <div className="pt-6 border-t border-primary/5">
                   <Button onClick={() => toast({ title: "Alertas actualizadas ✨", description: "Configuración de notificaciones guardada." })} className="bg-primary hover:bg-primary/90 font-black h-14 px-8 rounded-2xl shadow-xl shadow-primary/20 uppercase group">

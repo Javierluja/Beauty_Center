@@ -65,7 +65,7 @@ export default function Personal() {
 
   const [permDialogOpen, setPermDialogOpen] = useState(false);
   const [permUserId, setPermUserId] = useState<number | null>(null);
-  const [perms, setPerms] = useState<Record<string, boolean>>({ clientes: true, cuentas: true, personal: false });
+  const [perms, setPerms] = useState<Record<string, boolean>>({ gastos: true, productos: true, compras: true, agenda: true, avisos: true, ventas: true, sesiones: true, personal: false });
 
   const updatePerms = trpc.user.updatePermissions.useMutation({
     onSuccess: () => {
@@ -109,6 +109,7 @@ export default function Personal() {
                   <SelectTrigger className="rounded-xl border-primary/10 h-10 text-slate-800 font-bold"><SelectValue /></SelectTrigger>
                   <SelectContent className="rounded-xl">
                     <SelectItem value="ventas">Ventas / Staff</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
                     <SelectItem value="admin_pro">Administrador Pro</SelectItem>
                   </SelectContent>
                 </Select>
@@ -138,8 +139,8 @@ export default function Personal() {
                       </p>
                     </div>
                   </div>
-                  <Badge className={`border-none font-bold text-[9px] h-5 uppercase shrink-0 ${user.role === 'admin_pro' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                    {user.role === 'admin_pro' ? 'Admin Pro' : 'Ventas'}
+                  <Badge className={`border-none font-bold text-[9px] h-5 uppercase shrink-0 ${user.role === 'admin_pro' ? 'bg-primary text-primary-foreground' : user.role === 'admin' ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground'}`}>
+                    {user.role === 'admin_pro' ? 'Admin Pro' : user.role === 'admin' ? 'Administrador' : 'Ventas'}
                   </Badge>
                 </div>
                 
@@ -149,7 +150,7 @@ export default function Personal() {
                     <Button variant="outline" size="sm" onClick={() => { 
                       setPermUserId(user.id); 
                       const p = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
-                      setPerms(p || { clientes: true, cuentas: true, personal: false }); 
+                      setPerms(p || { gastos: true, productos: true, compras: true, agenda: true, avisos: true, ventas: true, sesiones: true, personal: false }); 
                       setPermDialogOpen(true); 
                     }} className="h-10 px-4 rounded-xl text-xs font-bold uppercase">
                       Permisos
@@ -168,19 +169,15 @@ export default function Personal() {
       <Dialog open={permDialogOpen} onOpenChange={setPermDialogOpen}>
         <DialogContent className="max-w-xs rounded-3xl bg-card border border-border">
           <DialogHeader><DialogTitle className="font-black uppercase">Permisos del Sistema</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-              <span className="font-bold text-sm">Módulo Cuentas</span>
-              <div onClick={() => setPerms({...perms, cuentas: !perms.cuentas})} className={`h-6 w-11 rounded-full cursor-pointer relative transition-colors ${perms.cuentas ? 'bg-primary' : 'bg-muted-foreground/30'}`}>
-                <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform ${perms.cuentas ? 'translate-x-6' : 'translate-x-1'}`} />
+          <div className="space-y-2 py-4 max-h-[60vh] overflow-y-auto no-scrollbar">
+            {Object.entries(perms).map(([key, val]) => (
+              <div key={key} className="flex items-center justify-between p-3 border border-border rounded-xl">
+                <span className="font-bold text-sm capitalize">Módulo {key}</span>
+                <div onClick={() => setPerms({...perms, [key]: !val})} className={`h-6 w-11 rounded-full cursor-pointer relative transition-colors ${val ? 'bg-primary' : 'bg-muted-foreground/30'}`}>
+                  <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform ${val ? 'translate-x-6' : 'translate-x-1'}`} />
+                </div>
               </div>
-            </div>
-            <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-              <span className="font-bold text-sm">Módulo Clientes</span>
-              <div onClick={() => setPerms({...perms, clientes: !perms.clientes})} className={`h-6 w-11 rounded-full cursor-pointer relative transition-colors ${perms.clientes ? 'bg-primary' : 'bg-muted-foreground/30'}`}>
-                <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform ${perms.clientes ? 'translate-x-6' : 'translate-x-1'}`} />
-              </div>
-            </div>
+            ))}
           </div>
           <Button onClick={() => updatePerms.mutate({ userId: permUserId!, permissions: JSON.stringify(perms) })} className="w-full bg-primary font-black uppercase rounded-xl h-12" disabled={updatePerms.isPending}>
             Guardar Permisos

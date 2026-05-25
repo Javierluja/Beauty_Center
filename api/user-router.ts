@@ -22,7 +22,7 @@ export const userRouter = createRouter({
     .input(
       z.object({
         userId: z.number(),
-        role: z.enum(["admin_pro", "ventas"]),
+        role: z.enum(["admin_pro", "admin", "ventas"]),
       })
     )
     .mutation(async ({ input }) => {
@@ -54,7 +54,7 @@ export const userRouter = createRouter({
         name: z.string(),
         email: z.string().email(),
         password: z.string(),
-        role: z.enum(["admin_pro", "ventas"]),
+        role: z.enum(["admin_pro", "admin", "ventas"]),
       })
     )
     .mutation(async ({ input }) => {

@@ -26,7 +26,7 @@ import {
   Settings,
 } from "lucide-react";
 import { useState, type ReactNode, useEffect } from "react";
-import { useLocation, useNavigate, Link } from "react-router";
+import { useLocation, useNavigate, Link, Navigate } from "react-router";
 import { AuthLayoutSkeleton } from "./AuthLayoutSkeleton";
 import { Button } from "./ui/button";
 
@@ -85,6 +85,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     if (userPerms[item.permKey] === false) return false;
     return true;
   });
+
+  if (location.pathname === '/personal' && user.role !== 'admin_pro') {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
