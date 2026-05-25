@@ -1,16 +1,16 @@
 import { z } from "zod";
-import { createRouter, adminQuery } from "./middleware.js";
+import { createRouter, authedQuery } from "./middleware.js";
 import { sessionPacks, sessionUsage } from "../db/schema.js";
 import { eq, and, sql } from "drizzle-orm";
 import { getDb } from "./queries/connection.js";
 
 export const sessionRouter = createRouter({
-  listAll: adminQuery.query(async () => {
+  listAll: authedQuery.query(async () => {
     const db = getDb();
     return await db.select().from(sessionPacks);
   }),
 
-  listByClient: adminQuery
+  listByClient: authedQuery
     .input(z.number())
     .query(async ({ input }) => {
       const db = getDb();
@@ -20,7 +20,7 @@ export const sessionRouter = createRouter({
         .where(eq(sessionPacks.clientId, input));
     }),
 
-  createPack: adminQuery
+  createPack: authedQuery
     .input(
       z.object({
         clientId: z.number(),
@@ -41,7 +41,7 @@ export const sessionRouter = createRouter({
       });
     }),
 
-  useSession: adminQuery
+  useSession: authedQuery
     .input(
       z.object({
         packId: z.number(),
@@ -81,7 +81,7 @@ export const sessionRouter = createRouter({
       return { success: true, remaining: newRemaining };
     }),
 
-  getUsageHistory: adminQuery
+  getUsageHistory: authedQuery
     .input(z.number())
     .query(async ({ input }) => {
       const db = getDb();

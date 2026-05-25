@@ -28,7 +28,7 @@ export const productRouter = createRouter({
     .input(z.number())
     .query(({ input }) => findProductById(input)),
 
-  create: adminQuery
+  create: authedQuery
     .input(
       z.object({
         name: z.string().min(1, "El nombre es requerido"),
@@ -46,7 +46,7 @@ export const productRouter = createRouter({
       return createProduct(input);
     }),
 
-  update: adminQuery
+  update: authedQuery
     .input(
       z.object({
         id: z.number(),
@@ -69,7 +69,7 @@ export const productRouter = createRouter({
     .input(z.number())
     .mutation(({ input }) => deleteProduct(input)),
 
-  adjustStock: adminQuery
+  adjustStock: authedQuery
     .input(
       z.object({
         id: z.number(),

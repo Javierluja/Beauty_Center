@@ -48,7 +48,7 @@ export const serviceRouter = createRouter({
       }
     }),
 
-  update: adminQuery
+  update: authedQuery
     .input(
       z.object({
         id: z.number(),
