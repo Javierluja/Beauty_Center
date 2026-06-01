@@ -69,11 +69,19 @@ export const authRouter = createRouter({
 
       const hashedPassword = await bcrypt.hash(input.password, 10);
       
+      // Consultamos si ya hay usuarios para decidir el rol inicial de forma segura
+      const { getDb } = await import("./queries/connection.js");
+      const { users } = await import("../db/schema.js");
+      const db = getDb();
+      const existingUsers = await db.select().from(users).limit(1);
+      
+      const role = existingUsers.length === 0 ? "admin_pro" : "ventas"; // Evita que se registren como admin si ya está en uso
+      
       const newUser = await createUser({
         name: input.name,
         email: input.email,
         password: hashedPassword,
-        role: "admin_pro" // El primer usuario que se registre será admin_pro
+        role: role
       });
 
       return { success: true, id: newUser?.id };
