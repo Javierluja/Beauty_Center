@@ -1,0 +1,97 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Manual de Usuario - Beauty Center</title>
+<style>
+  body { font-family: 'Calibri', sans-serif; line-height: 1.6; color: #333; }
+  h1 { color: #8A2BE2; text-align: center; border-bottom: 2px solid #8A2BE2; padding-bottom: 10px; }
+  h2 { color: #4B0082; margin-top: 30px; }
+  h3 { color: #6A5ACD; }
+  ul { margin-bottom: 20px; }
+  .note { background-color: #f4f4f4; border-left: 4px solid #8A2BE2; padding: 10px; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<h1>Manual de Usuario Oficial - Beauty Center</h1>
+<p><strong>Plataforma de Gestión y Punto de Venta para Centro de Estética</strong></p>
+<p><em>Versión: 1.0</em></p>
+
+<h2>1. Introducción</h2>
+<p>Bienvenido al sistema <strong>Beauty Center</strong> (Midnight Plum × Blush Rose). Esta plataforma ha sido diseñada para administrar integralmente su centro de estética, permitiendo el registro de ventas, control de caja, agendamiento de citas, control de inventario y gestión de personal.</p>
+
+<h2>2. Estructura del Menú Principal</h2>
+<p>El sistema se divide en los siguientes módulos, accesibles desde la barra lateral izquierda:</p>
+<ul>
+  <li><strong>Dashboard:</strong> Resumen general del día, métricas clave de ingresos, citas próximas y alertas de stock bajo.</li>
+  <li><strong>Agenda:</strong> Calendario interactivo para programar citas de clientes.</li>
+  <li><strong>Avisos:</strong> Centro de notificaciones para envíos de recordatorios (ej. vía WhatsApp) a los clientes.</li>
+  <li><strong>Ventas (Punto de Venta):</strong> Módulo principal de cobro. Permite seleccionar servicios, productos, clientes y formas de pago.</li>
+  <li><strong>Compras:</strong> Registro de adquisición de productos para abastecer el inventario.</li>
+  <li><strong>Sesiones:</strong> Control de paquetes de tratamientos por cliente (ej. Depilación Láser en varias sesiones).</li>
+  <li><strong>Productos:</strong> Inventario físico. Permite crear productos, definir stock y precio de venta.</li>
+  <li><strong>Servicios:</strong> Catálogo de servicios ofrecidos en el salón, con duración y precio predefinido.</li>
+  <li><strong>Cuentas:</strong> Gestión de Cuentas por Cobrar (fiados/créditos) y abonos de clientes.</li>
+  <li><strong>Clientes:</strong> Base de datos CRM de las personas que asisten al local.</li>
+  <li><strong>Gastos:</strong> Registro de egresos, pagos de servicios básicos, sueldos o insumos.</li>
+  <li><strong>Personal:</strong> Gestión de usuarios con acceso al sistema (creación de cuentas y asignación de permisos).</li>
+  <li><strong>Ajustes:</strong> Configuración de perfil, apariencia (Modo Oscuro), y cambio de contraseñas.</li>
+</ul>
+
+<h2>3. Flujos de Trabajo Diarios</h2>
+
+<h3>3.1. Realizar una Venta Normal</h3>
+<ol>
+  <li>Dirígete al módulo de <strong>Ventas</strong>.</li>
+  <li>En el lado izquierdo, selecciona los <em>Servicios</em> o <em>Productos</em> que deseas cobrar usando el botón "+".</li>
+  <li>Los ítems aparecerán en la Orden de Venta a la derecha, donde puedes ajustar las cantidades usando "+" o "-".</li>
+  <li>Selecciona el <strong>Cliente</strong>. Si es un cliente casual, deja la opción <em>Cliente General (Sin registro)</em>.</li>
+  <li>Selecciona la <strong>Forma de Pago</strong> (Contado, Transferencia, Transbank, etc.).</li>
+  <li>Haz clic en <strong>COBRAR AHORA</strong>. La venta se registrará inmediatamente en la caja.</li>
+</ol>
+
+<h3>3.2. Realizar una Venta a Crédito (Fiado)</h3>
+<div class="note">
+  <strong>Nota:</strong> El sistema prohíbe realizar ventas a crédito al "Cliente General". Debe seleccionar un cliente registrado para asignar la deuda.
+</div>
+<ol>
+  <li>Sigue los pasos de una venta normal.</li>
+  <li>En el selector de Cliente, <strong>elige obligatoriamente un cliente</strong> registrado.</li>
+  <li>En Forma de Pago, selecciona <strong>Crédito</strong>.</li>
+  <li>Presiona <strong>COBRAR AHORA</strong>. El monto de la venta pasará automáticamente al módulo de <strong>Cuentas</strong> bajo el nombre de ese cliente.</li>
+</ol>
+
+<h3>3.3. Gestionar Cuentas y Abonos</h3>
+<ol>
+  <li>Dirígete al módulo de <strong>Cuentas</strong>.</li>
+  <li>Podrás visualizar a todos los clientes que tienen saldos pendientes (letras en rojo).</li>
+  <li>Haz clic en el botón <strong>Abonar</strong> al lado del cliente correspondiente.</li>
+  <li>Ingresa el monto que el cliente está pagando, selecciona el medio de pago real (Contado, Transferencia) y guarda. El saldo pendiente se reducirá automáticamente.</li>
+</ol>
+
+<h3>3.4. Agregar Gastos del Local</h3>
+<ol>
+  <li>Dirígete al módulo de <strong>Gastos</strong>.</li>
+  <li>Presiona <strong>Nuevo Gasto</strong>.</li>
+  <li>Ingresa la descripción (ej. "Luz mensual"), el monto, categoría e indicaciones.</li>
+  <li>Estos montos se restarán visualmente en los balances para obtener la ganancia real neta.</li>
+</ol>
+
+<h2>4. Configuración de Seguridad y Permisos</h2>
+<p>El administrador ("Admin Pro") tiene el control absoluto. Los empleados (rol "Ventas") solo ven lo que el administrador les permite.</p>
+<ul>
+  <li><strong>Ocultar información:</strong> Para evitar que un empleado vea la lista de Clientes o el módulo de Cuentas, el administrador debe ir al módulo <strong>Personal</strong>, buscar al empleado, hacer clic en el botón gris <strong>"Permisos"</strong> y apagar los interruptores. Estos cambios aplican la próxima vez que el empleado inicie sesión.</li>
+  <li><strong>Cambio de Contraseña:</strong> Cualquier usuario puede cambiar su propia clave yendo al menú inferior <strong>Ajustes > Seguridad</strong>.</li>
+</ul>
+
+<h2>5. Recomendaciones Finales</h2>
+<ul>
+  <li>El sistema cuenta con un <strong>Modo Oscuro</strong> para ambientes con poca luz, configurable en Ajustes > Apariencia.</li>
+  <li>Es recomendable crear primero los <strong>Servicios</strong> y <strong>Productos</strong> antes de operar el Punto de Venta.</li>
+  <li>Use la pestaña <strong>Historial</strong> dentro de Ventas para consultar rápidamente lo vendido en el día e identificar errores.</li>
+</ul>
+
+<hr>
+<p style="text-align:center; font-size: 12px; color: #888;">© 2026 Beauty Center Management System - Generado Automáticamente</p>
+</body>
+</html>

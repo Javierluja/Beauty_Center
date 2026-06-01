@@ -133,9 +133,7 @@ export default function Compras() {
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl md:text-5xl font-black text-primary tracking-tighter uppercase flex items-center gap-3">
-            Ingreso de Facturas <ShoppingBag className="h-8 w-8" />
-          </h1>
+          <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Control de Compras</h1>
           <p className="text-xs text-muted-foreground mt-1">Gestión de proveedores e historial de documentos</p>
         </div>
       </div>

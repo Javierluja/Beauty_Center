@@ -69,7 +69,7 @@ export default function Cuentas() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-primary tracking-tight uppercase">Control de Créditos 💰</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Control de Créditos</h1>
           <p className="text-xs md:text-sm text-slate-600 font-black italic mt-1 uppercase tracking-widest">Cuentas pendientes por cobrar</p>
         </div>
         <Card className="bg-primary text-white border-none rounded-3xl px-8 py-4 shadow-xl shadow-primary/20">

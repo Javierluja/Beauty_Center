@@ -111,9 +111,7 @@ export default function Notificaciones() {
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tighter uppercase flex items-center gap-2">
-            Centro de Avisos <Sparkles className="h-6 w-6" />
-          </h1>
+          <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Avisos y Notificaciones</h1>
           <p className="text-xs text-muted-foreground mt-1">
             Gestiona recordatorios y mantén a tus clientes informados
           </p>

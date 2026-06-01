@@ -18,36 +18,75 @@ import {
   X,
   MessageCircle,
   Search,
+  Pencil,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Sesiones() {
   const { toast } = useToast();
   const utils = trpc.useUtils();
+
+  // ── Estado formulario crear/editar pack ──────────────────────────
   const [showForm, setShowForm] = useState(false);
+  const [editingPack, setEditingPack] = useState<any>(null); // null = crear nuevo
   const [selectedClientId, setSelectedClientId] = useState("");
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [customTitle, setCustomTitle] = useState("");
   const [sessionCount, setSessionCount] = useState("10");
+
+  // ── Estado búsqueda ───────────────────────────────────────────────
   const [searchTermPacks, setSearchTermPacks] = useState("");
 
+  // ── Estado registrar sesión ───────────────────────────────────────
   const [schedulingPack, setSchedulingPack] = useState<any>(null);
   const [nextDate, setNextDate] = useState("");
   const [nextTime, setNextTime] = useState("");
 
+  // ── Estado confirmación eliminar ──────────────────────────────────
+  const [deletingPack, setDeletingPack] = useState<any>(null);
+
+  // ── Queries ───────────────────────────────────────────────────────
   const { data: clients } = trpc.customers.list.useQuery();
   const { data: allPacks, isLoading } = trpc.session.listAll.useQuery();
   const { data: services } = trpc.service.list.useQuery({ active: true });
+  const { data: allAppointments } = trpc.appointment.list.useQuery();
 
+  // ── Mutations ─────────────────────────────────────────────────────
   const createPack = trpc.session.createPack.useMutation({
     onSuccess: () => {
       utils.session.listAll.invalidate();
-      toast({ title: "¡Plan de sesiones creado! 🌸" });
+      toast({ title: "Plan de sesiones creado" });
       setShowForm(false);
       resetForm();
     },
     onError: (err) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  });
+
+  const updatePack = trpc.session.updatePack.useMutation({
+    onSuccess: () => {
+      utils.session.listAll.invalidate();
+      toast({ title: "Plan actualizado correctamente" });
+      setShowForm(false);
+      setEditingPack(null);
+      resetForm();
+    },
+    onError: (err) => {
+      toast({ title: "Error al actualizar", description: err.message, variant: "destructive" });
+    }
+  });
+
+  const deletePack = trpc.session.deletePack.useMutation({
+    onSuccess: () => {
+      utils.session.listAll.invalidate();
+      toast({ title: "Plan eliminado" });
+      setDeletingPack(null);
+    },
+    onError: (err) => {
+      toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
     }
   });
 
@@ -62,9 +101,7 @@ export default function Sesiones() {
   });
 
   const createNotification = trpc.notification.create.useMutation({
-    onSuccess: () => {
-      utils.notification.invalidate();
-    },
+    onSuccess: () => { utils.notification.invalidate(); },
     onError: (err) => {
       toast({ title: "Error en aviso", description: err.message, variant: "destructive" });
     }
@@ -74,7 +111,7 @@ export default function Sesiones() {
     onSuccess: (res) => {
       utils.session.listAll.invalidate();
       utils.appointment.invalidate();
-      toast({ title: "¡Sesión registrada! ✨", description: `Quedan ${res.remaining} sesiones.` });
+      toast({ title: "Sesión registrada", description: `Quedan ${res.remaining} sesiones.` });
       setSchedulingPack(null);
       setNextDate("");
       setNextTime("");
@@ -85,40 +122,70 @@ export default function Sesiones() {
   });
 
   const updateAppointment = trpc.appointment.update.useMutation({
-    onSuccess: () => {
-      utils.appointment.invalidate();
-    },
+    onSuccess: () => { utils.appointment.invalidate(); },
     onError: (err) => {
       toast({ title: "Error al actualizar cita", description: err.message, variant: "destructive" });
     }
   });
 
-  const handleUseSession = (pack: any) => {
-    if (pack.remainingSessions <= 0) return;
-    
-    const pendingAppt = allAppointments?.find(a => a.packId === pack.id && a.status === "pending");
-
-    if (pack.remainingSessions === 1) {
-      // Es la última sesión, se marca como consumida directamente
-      useSession.mutate({ packId: pack.id });
-      // Se completa la cita pendiente del pack
-      if (pendingAppt) {
-        updateAppointment.mutate({ id: pendingAppt.id, status: "completed" });
-      }
-    } else {
-      // Quedan más sesiones, se abre el diálogo para agendar la próxima
-      setSchedulingPack(pack);
-    }
-  };
-
+  // ── Helpers ───────────────────────────────────────────────────────
   function resetForm() {
     setSelectedClientId("");
     setSelectedServiceId("");
     setCustomTitle("");
     setSessionCount("10");
+    setEditingPack(null);
   }
 
-  const { data: allAppointments } = trpc.appointment.list.useQuery();
+  function openEdit(pack: any) {
+    setEditingPack(pack);
+    setCustomTitle(pack.customTitle || "");
+    setSessionCount(String(pack.totalSessions));
+    setSelectedClientId(String(pack.clientId));
+    setSelectedServiceId(String(pack.serviceId));
+    setShowForm(true);
+  }
+
+  function openCreate() {
+    resetForm();
+    setShowForm(true);
+  }
+
+  function handleFormSubmit() {
+    if (!customTitle) {
+      toast({ title: "Atención", description: "Ingresa el nombre del plan", variant: "destructive" });
+      return;
+    }
+    if (editingPack) {
+      updatePack.mutate({
+        packId: editingPack.id,
+        customTitle,
+        totalSessions: Number(sessionCount) || 10,
+      });
+    } else {
+      if (!selectedClientId) {
+        toast({ title: "Atención", description: "Selecciona un cliente", variant: "destructive" });
+        return;
+      }
+      createPack.mutate({
+        clientId: Number(selectedClientId),
+        serviceId: Number(selectedServiceId) || services?.[0]?.id || 1,
+        customTitle,
+        totalSessions: Number(sessionCount) || 10,
+      });
+    }
+  }
+
+  const handleUseSession = (pack: any) => {
+    if (pack.remainingSessions <= 0) return;
+    const pendingAppt = allAppointments?.find(a => a.packId === pack.id && a.status === "pending");
+    if (pack.remainingSessions === 1) {
+      useSession.mutate({ packId: pack.id });
+      if (pendingAppt) updateAppointment.mutate({ id: pendingAppt.id, status: "completed" });
+    } else {
+      setSchedulingPack(pack);
+    }
+  };
 
   const activePacks = allPacks?.filter(p => {
     const hasRemaining = p.remainingSessions > 0;
@@ -129,15 +196,15 @@ export default function Sesiones() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
+
+      {/* ── ENCABEZADO ─────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black flex items-center gap-2 text-foreground tracking-tight">
-            Control de Sesiones <Sparkles className="h-5 w-5 text-primary" />
-          </h1>
+          <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Control de Sesiones</h1>
           <p className="text-xs text-muted-foreground mt-1">Gestiona packs de tratamiento personalizados</p>
         </div>
         <Button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => showForm ? (setShowForm(false), resetForm()) : openCreate()}
           className="bg-primary hover:bg-primary/90 font-bold shadow-md"
         >
           {showForm ? <X className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
@@ -145,41 +212,49 @@ export default function Sesiones() {
         </Button>
       </div>
 
+      {/* ── FORMULARIO CREAR / EDITAR ──────────────────────────────── */}
       {showForm && (
         <Card className="border border-border bg-card shadow-xl rounded-2xl overflow-hidden">
           <CardHeader className="border-b border-border px-6 py-4">
             <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" /> Crear nuevo plan de sesiones
+              <Sparkles className="h-4 w-4 text-primary" />
+              {editingPack ? "Editar plan de sesiones" : "Crear nuevo plan de sesiones"}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest ml-1">Cliente</label>
-                <select
-                  className="w-full h-10 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none"
-                  value={selectedClientId}
-                  onChange={(e) => setSelectedClientId(e.target.value)}
-                >
-                  <option value="">Elegir cliente...</option>
-                  {clients?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest ml-1">Servicio Base</label>
-                <select
-                  className="w-full h-10 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none"
-                  value={selectedServiceId}
-                  onChange={(e) => {
-                    setSelectedServiceId(e.target.value);
-                    const s = services?.find(srv => srv.id.toString() === e.target.value);
-                    if (s) setCustomTitle(s.name);
-                  }}
-                >
-                  <option value="">Elegir servicio...</option>
-                  {services?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
+              {/* Cliente — solo al crear */}
+              {!editingPack && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest ml-1">Cliente</label>
+                  <select
+                    className="w-full h-10 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none"
+                    value={selectedClientId}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                  >
+                    <option value="">Elegir cliente...</option>
+                    {clients?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+              )}
+              {/* Servicio — solo al crear */}
+              {!editingPack && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest ml-1">Servicio Base</label>
+                  <select
+                    className="w-full h-10 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none"
+                    value={selectedServiceId}
+                    onChange={(e) => {
+                      setSelectedServiceId(e.target.value);
+                      const s = services?.find(srv => srv.id.toString() === e.target.value);
+                      if (s) setCustomTitle(s.name);
+                    }}
+                  >
+                    <option value="">Elegir servicio...</option>
+                    {services?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest ml-1">Nombre del Plan</label>
                 <Input value={customTitle} onChange={(e) => setCustomTitle(e.target.value)} placeholder="Ej: Pack 10 Masajes" className="border-border" />
@@ -190,27 +265,17 @@ export default function Sesiones() {
               </div>
             </div>
             <Button
-              onClick={() => {
-                if (!selectedClientId || !customTitle) {
-                  toast({ title: "Atención", description: "Completa cliente y nombre del plan", variant: "destructive" });
-                  return;
-                }
-                createPack.mutate({
-                  clientId: Number(selectedClientId),
-                  serviceId: Number(selectedServiceId) || services?.[0]?.id || 1,
-                  customTitle,
-                  totalSessions: Number(sessionCount) || 10
-                });
-              }}
-              disabled={createPack.isPending}
+              onClick={handleFormSubmit}
+              disabled={createPack.isPending || updatePack.isPending}
               className="bg-primary hover:bg-primary/90 font-bold h-11 px-8 shadow-lg w-full md:w-auto"
             >
-              {createPack.isPending ? "GUARDANDO..." : "CREAR PLAN ✨"}
+              {(createPack.isPending || updatePack.isPending) ? "GUARDANDO..." : editingPack ? "GUARDAR CAMBIOS" : "CREAR PLAN"}
             </Button>
           </CardContent>
         </Card>
       )}
 
+      {/* ── BUSCADOR ──────────────────────────────────────────────── */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -221,6 +286,7 @@ export default function Sesiones() {
         />
       </div>
 
+      {/* ── LISTA DE PACKS ────────────────────────────────────────── */}
       <div className="space-y-4">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
           Sesiones Activas
@@ -230,6 +296,11 @@ export default function Sesiones() {
         <div className="grid gap-4">
           {isLoading ? (
             <Skeleton className="h-40 w-full rounded-2xl bg-muted" />
+          ) : activePacks.length === 0 ? (
+            <div className="py-16 text-center bg-muted/30 rounded-2xl border border-dashed border-border">
+              <Sparkles className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
+              <p className="text-xs text-muted-foreground">No hay sesiones activas</p>
+            </div>
           ) : activePacks.map(pack => {
             const client = clients?.find(c => c.id === pack.clientId);
             const progress = ((pack.totalSessions - pack.remainingSessions) / pack.totalSessions) * 100;
@@ -239,13 +310,36 @@ export default function Sesiones() {
                   <div>
                     <h3 className="text-xl font-black text-foreground tracking-tight">{client?.name}</h3>
                     <span className="text-[10px] text-muted-foreground mt-1 bg-muted px-3 py-1 rounded-full inline-block">
-                      {pack.customTitle} · {new Date(pack.purchaseDate).toLocaleDateString()}
+                      {pack.customTitle} · {new Date(pack.purchaseDate).toLocaleDateString('es-CL')}
                     </span>
                   </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-black text-primary">
-                      {pack.totalSessions - pack.remainingSessions}
-                      <span className="text-lg text-muted-foreground font-medium ml-1">/ {pack.totalSessions}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-4xl font-black text-primary">
+                        {pack.totalSessions - pack.remainingSessions}
+                        <span className="text-lg text-muted-foreground font-medium ml-1">/ {pack.totalSessions}</span>
+                      </div>
+                    </div>
+                    {/* Botones editar / eliminar */}
+                    <div className="flex flex-col gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10 rounded-xl"
+                        onClick={() => openEdit(pack)}
+                        title="Editar plan"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 border-destructive/20 text-destructive hover:bg-destructive/10 rounded-xl"
+                        onClick={() => setDeletingPack(pack)}
+                        title="Eliminar plan"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -259,7 +353,7 @@ export default function Sesiones() {
                   </div>
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <p className="text-xs text-muted-foreground bg-primary/5 px-3 py-1.5 rounded-lg">
-                      Realizadas: <strong className="text-primary">{pack.totalSessions - pack.remainingSessions}</strong> · Faltan: <strong className="text-primary">{pack.remainingSessions}</strong> 🌸
+                      Realizadas: <strong className="text-primary">{pack.totalSessions - pack.remainingSessions}</strong> · Faltan: <strong className="text-primary">{pack.remainingSessions}</strong>
                     </p>
                     <div className="flex items-center gap-2">
                       <Button
@@ -267,7 +361,7 @@ export default function Sesiones() {
                         size="sm"
                         className="border-border text-muted-foreground hover:text-foreground hover:border-primary/30 font-medium"
                         onClick={() => {
-                          const msg = `Hola ${client?.name}! 🌸 Te escribo de Beauty Center. Registramos una sesión de ${pack.customTitle}. Te quedan ${pack.remainingSessions} sesiones. ¡Te esperamos! ✨`;
+                          const msg = `Hola ${client?.name}! Te escribo de Beauty Center. Registramos una sesión de ${pack.customTitle}. Te quedan ${pack.remainingSessions} sesiones. ¡Te esperamos!`;
                           window.open(`https://wa.me/${client?.phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
                         }}
                       >
@@ -291,6 +385,7 @@ export default function Sesiones() {
         </div>
       </div>
 
+      {/* ── MODAL: REGISTRAR SESIÓN ────────────────────────────────── */}
       <Dialog open={!!schedulingPack} onOpenChange={(open) => !open && setSchedulingPack(null)}>
         <DialogContent className="max-w-md rounded-2xl border-border bg-card">
           <DialogHeader>
@@ -331,26 +426,58 @@ export default function Sesiones() {
                     notes: `Sesión programada desde pack: ${schedulingPack.customTitle}`
                   });
                   const pendingAppt = allAppointments?.find(a => a.packId === schedulingPack.id && a.status === "pending");
-                  if (pendingAppt) {
-                    updateAppointment.mutate({ id: pendingAppt.id, status: "completed" });
-                  }
+                  if (pendingAppt) updateAppointment.mutate({ id: pendingAppt.id, status: "completed" });
                   const client = clients?.find(c => c.id === schedulingPack.clientId);
                   createNotification.mutate({
                     clientId: schedulingPack.clientId,
                     type: "appointment_reminder",
-                    message: `Hola ${client?.name || ""}! 🌸 Te recordamos tu próxima cita de ${schedulingPack.customTitle} el día ${nextDate} a las ${nextTime}. ¡Te esperamos! ✨`
+                    message: `Hola ${client?.name || ""}! Te recordamos tu próxima cita de ${schedulingPack.customTitle} el día ${nextDate} a las ${nextTime}. ¡Te esperamos!`
                   });
                 }}
                 disabled={useSession.isPending || createAppointment.isPending || !nextDate || !nextTime}
                 className="w-full bg-primary hover:bg-primary/90 font-bold h-12 rounded-xl shadow-lg uppercase"
               >
-                {useSession.isPending || createAppointment.isPending ? "Procesando..." : "Registrar y Agendar ✨"}
+                {useSession.isPending || createAppointment.isPending ? "Procesando..." : "Registrar y Agendar"}
               </Button>
               <Button variant="ghost" onClick={() => setSchedulingPack(null)} className="w-full h-10 font-medium text-muted-foreground hover:text-foreground">Cancelar</Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── MODAL: CONFIRMAR ELIMINAR ─────────────────────────────── */}
+      <Dialog open={!!deletingPack} onOpenChange={(open) => !open && setDeletingPack(null)}>
+        <DialogContent className="max-w-sm rounded-2xl border-border bg-card">
+          <DialogHeader>
+            <DialogTitle className="font-bold text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" /> Eliminar Plan
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-1">
+            <p className="text-sm text-muted-foreground">
+              ¿Estás segura de que quieres eliminar el plan <strong className="text-foreground">"{deletingPack?.customTitle}"</strong> de {clients?.find(c => c.id === deletingPack?.clientId)?.name}?
+              <br /><span className="text-destructive text-xs font-bold mt-1 block">Esta acción no se puede deshacer.</span>
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl"
+                onClick={() => setDeletingPack(null)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 bg-destructive hover:bg-destructive/90 text-white font-bold rounded-xl"
+                onClick={() => deletePack.mutate({ packId: deletingPack.id })}
+                disabled={deletePack.isPending}
+              >
+                {deletePack.isPending ? "Eliminando..." : "Sí, eliminar"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

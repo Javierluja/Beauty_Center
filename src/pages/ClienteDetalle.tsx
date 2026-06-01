@@ -85,7 +85,7 @@ export default function ClienteDetalle() {
         <Button variant="ghost" size="sm" onClick={() => navigate("/clientes")}>
           <ChevronLeft className="h-4 w-4 mr-1" /> Volver
         </Button>
-        <h1 className="text-3xl font-bold tracking-tight">Detalle del Cliente</h1>
+        <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Detalle del Cliente</h1>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

@@ -89,7 +89,7 @@ export default function Servicios() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-black text-primary tracking-tighter uppercase">Servicios 🌸</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Catálogo de Servicios</h1>
           <p className="text-xs md:text-sm text-muted-foreground font-medium italic">Catálogo de tratamientos y belleza</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -62,7 +62,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background p-4">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full bg-card rounded-3xl shadow-xl border border-primary/20">
-          <h1 className="text-3xl font-black text-primary tracking-tighter uppercase">Beauty Center</h1>
+          <h1 className="text-3xl font-black text-primary tracking-tighter uppercase">Beauty Center Ventas</h1>
           <Button onClick={() => window.location.href = LOGIN_PATH} size="lg" className="w-full bg-primary font-black">
             INICIAR SESIÓN
           </Button>
@@ -104,12 +104,16 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         {/* Logo */}
         <div className="px-6 py-7 flex items-center justify-between border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-2xl bg-primary-gradient flex items-center justify-center shadow-lg shadow-primary/25">
-              <Scissors className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 overflow-hidden bg-gradient-to-br from-primary to-primary/70 shrink-0">
+              <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6">
+                <path d="M16 3L20.5 11.5H30L22.5 17L25.5 26L16 21L6.5 26L9.5 17L2 11.5H11.5L16 3Z" fill="white" fillOpacity="0.92"/>
+                <path d="M12 23L20 9" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.45"/>
+                <circle cx="16" cy="16" r="2.5" fill="white" fillOpacity="0.28"/>
+              </svg>
             </div>
-            <div>
-              <span className="font-black text-base text-foreground tracking-tight block leading-none">Beauty</span>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Center</span>
+            <div className="min-w-0">
+              <span className="font-black text-sm text-foreground tracking-tight block leading-tight">Beauty Center</span>
+              <span className="text-[9px] font-bold text-primary uppercase tracking-widest block">Ventas</span>
             </div>
           </div>
           <Button variant="ghost" size="icon" className="lg:hidden text-muted-foreground hover:text-foreground" onClick={() => setIsMobileMenuOpen(false)}>
@@ -197,10 +201,16 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         {/* Header móvil */}
         <header className="lg:hidden h-16 border-b border-border bg-card/80 backdrop-blur-md flex items-center justify-between px-4 sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-xl bg-primary-gradient flex items-center justify-center">
-              <Scissors className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-primary to-primary/70 shadow-md overflow-hidden shrink-0">
+              <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5">
+                <path d="M20 6L24 14H32L26 19.5L28.5 28L20 23L11.5 28L14 19.5L8 14H16L20 6Z" fill="white" fillOpacity="0.9"/>
+                <circle cx="20" cy="20" r="5" fill="white" fillOpacity="0.4"/>
+              </svg>
             </div>
-            <span className="font-black text-sm text-foreground uppercase tracking-tight">Beauty Center</span>
+            <div>
+              <span className="font-black text-xs text-foreground uppercase tracking-tight block leading-none">Beauty Center</span>
+              <span className="text-[8px] font-bold text-primary uppercase tracking-widest block mt-0.5">Ventas</span>
+            </div>
           </div>
           <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)} className="text-muted-foreground hover:text-primary">
             <Menu className="h-5 w-5" />

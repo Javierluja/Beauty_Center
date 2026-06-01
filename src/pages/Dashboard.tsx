@@ -93,9 +93,7 @@ export default function Dashboard() {
 
       {/* Header */}
       <div className="flex flex-col gap-1 pb-2">
-        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
-          Panel de Control
-        </h1>
+        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">Panel de Control</h1>
         <p className="text-sm text-muted-foreground">
           Bienvenida, <span className="text-primary font-semibold">{user?.name || "Administradora"}</span>
         </p>
