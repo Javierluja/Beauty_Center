@@ -168,3 +168,13 @@ export const notifications = mysqlTable("notifications", {
   sentAt: timestamp("sentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
+
+export const accessLogs = mysqlTable("accessLogs", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  userName: varchar("userName", { length: 255 }).notNull(),
+  userEmail: varchar("userEmail", { length: 255 }).notNull(),
+  action: varchar("action", { length: 100 }).notNull(),
+  ipAddress: varchar("ipAddress", { length: 100 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});

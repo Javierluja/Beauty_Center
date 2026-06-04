@@ -3,12 +3,17 @@ import { createRouter, adminProQuery, authedQuery } from "./middleware.js";
 import { users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getDb } from "./queries/connection.js";
+import { getAccessLogs } from "./queries/access-logs.js";
 import bcrypt from "bcryptjs"; // Importar para manejar contraseñas
 
 export const userRouter = createRouter({
   list: adminProQuery.query(async () => {
     const db = getDb();
     return await db.select().from(users);
+  }),
+
+  accessLogs: adminProQuery.query(async () => {
+    return await getAccessLogs();
   }),
 
   delete: adminProQuery

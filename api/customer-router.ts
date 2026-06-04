@@ -81,6 +81,17 @@ export const customerRouter = createRouter({
       const newBalance = currentBalance + input.amountToAdd;
       return updateClient(input.id, { balance: newBalance.toString() });
     }),
+
+  setBalance: authedQuery
+    .input(
+      z.object({
+        id: z.number(),
+        balance: z.number(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return updateClient(input.id, { balance: input.balance.toString() });
+    }),
 });
 
 

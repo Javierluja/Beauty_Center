@@ -44,6 +44,17 @@ export default function Notificaciones() {
     message: "",
   });
 
+  const d = new Date();
+  const defaultMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
+
+  const monthsList = Array.from({ length: 12 }).map((_, i) => {
+    const date = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    const val = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const label = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    return { val, label: label.charAt(0).toUpperCase() + label.slice(1) };
+  });
+
   const { data: clients } = trpc.customers.list.useQuery();
 
   const { data: pendingNotifications, isLoading: pendingLoading } =
@@ -279,11 +290,34 @@ export default function Notificaciones() {
             </TabsContent>
 
             <TabsContent value="sent" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex justify-end mb-4">
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="w-[200px] rounded-xl bg-card border-primary/20 shadow-sm font-bold capitalize">
+                    <SelectValue placeholder="Seleccionar mes" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl capitalize">
+                    {monthsList.map(m => (
+                      <SelectItem key={m.val} value={m.val}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Card className="border-2 border-primary/10 shadow-xl bg-admin-panel rounded-3xl overflow-hidden">
                 <CardContent className="pt-6">
-                  {sentNotifications && sentNotifications.length > 0 ? (
-                    <div className="space-y-4">
-                      {sentNotifications.map((notif) => (
+                  {(() => {
+                    const filtered = sentNotifications?.filter((notif) => {
+                      const d = new Date(notif.sentAt || notif.createdAt);
+                      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                      return val === selectedMonth;
+                    });
+                    
+                    if (!filtered || filtered.length === 0) {
+                      return <div className="text-center py-20 italic text-slate-400 font-black uppercase tracking-widest">No hay envíos este mes</div>;
+                    }
+                    
+                    return (
+                      <div className="space-y-4">
+                        {filtered.map((notif) => (
                         <div key={notif.id} className="flex items-center justify-between p-4 bg-slate-100/50 rounded-2xl border-2 border-slate-100 shadow-sm">
                           <div className="flex items-center gap-5">
                             <div className="h-10 w-10 rounded-xl bg-slate-200 flex items-center justify-center text-slate-500">
@@ -300,9 +334,8 @@ export default function Notificaciones() {
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <div className="text-center py-20 italic text-slate-400 font-black uppercase tracking-widest">No hay historial de envíos</div>
-                  )}
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>

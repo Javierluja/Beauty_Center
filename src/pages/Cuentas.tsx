@@ -38,6 +38,13 @@ export default function Cuentas() {
     }
   });
 
+  const setBalance = trpc.customers.setBalance.useMutation({
+    onSuccess: () => {
+      utils.customers.list.invalidate();
+      toast({ title: "Saldo actualizado ✨", description: "El balance de la giftcard fue modificado." });
+    }
+  });
+
   const markAsPaid = trpc.sale.updateStatus.useMutation({
     onSuccess: () => {
       utils.sale.list.invalidate();
@@ -221,8 +228,33 @@ export default function Cuentas() {
                             disabled={addGiftBalance.isPending || !giftBalances[client.id]}
                             className="bg-primary hover:bg-primary/90 text-white font-bold rounded-lg h-9 px-3 shadow-md uppercase text-[10px] tracking-wider"
                           >
-                            Cargar
+                            Sumar
                           </Button>
+                          <Button 
+                            onClick={() => {
+                              if (!giftBalances[client.id]) return;
+                              setBalance.mutate({ id: client.id, balance: Number(giftBalances[client.id]) });
+                              setGiftBalances({ ...giftBalances, [client.id]: "" });
+                            }}
+                            disabled={setBalance.isPending || !giftBalances[client.id]}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg h-9 px-3 shadow-md uppercase text-[10px] tracking-wider"
+                          >
+                            Setear
+                          </Button>
+                          {Number(client.balance) > 0 && (
+                            <Button 
+                              onClick={() => {
+                                if (confirm("¿Seguro que deseas eliminar este saldo?")) {
+                                  setBalance.mutate({ id: client.id, balance: 0 });
+                                }
+                              }}
+                              disabled={setBalance.isPending}
+                              variant="ghost"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 px-3 font-bold rounded-lg uppercase text-[10px] tracking-wider border border-red-100"
+                            >
+                              Eliminar
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

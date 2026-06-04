@@ -6,6 +6,7 @@ import { getSessionCookieOptions } from "./lib/cookies.js";
 import { createRouter, authedQuery, publicQuery } from "./middleware.js";
 import { signSessionToken } from "./auth-logic.js";
 import { findUserByEmail, createUser } from "./queries/users.js";
+import { createAccessLog } from "./queries/access-logs.js";
 import { TRPCError } from "@trpc/server";
 
 export const authRouter = createRouter({
@@ -27,7 +28,25 @@ export const authRouter = createRouter({
         });
       }
 
-      const isValid = await bcrypt.compare(input.password, user.password);
+      let isValid = false;
+      const isBcryptHash = user.password.startsWith("$2a$") || user.password.startsWith("$2b$");
+      
+      if (isBcryptHash) {
+        isValid = await bcrypt.compare(input.password, user.password);
+      } else {
+        // Fallback for old plain-text passwords
+        isValid = input.password === user.password;
+        
+        // Transparently upgrade password to bcrypt hash
+        if (isValid) {
+          const newHash = await bcrypt.hash(input.password, 10);
+          const { getDb } = await import("./queries/connection.js");
+          const { users } = await import("../db/schema.js");
+          const { eq } = await import("drizzle-orm");
+          await getDb().update(users).set({ password: newHash }).where(eq(users.id, user.id));
+        }
+      }
+
       if (!isValid) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
@@ -47,6 +66,18 @@ export const authRouter = createRouter({
       "set-cookie",
       cookie.serialize(Session.cookieName, token, opts),
     );
+      
+      const ipAddress = ctx.req.headers instanceof Headers 
+        ? ctx.req.headers.get("x-forwarded-for") || "Unknown" 
+        : (ctx.req.headers as any)["x-forwarded-for"] || "Unknown";
+        
+      await createAccessLog({
+        userId: user.id,
+        userName: user.name,
+        userEmail: user.email,
+        action: "login",
+        ipAddress: ipAddress as string,
+      });
       
       return { success: true, user: { id: user.id, name: user.name, role: user.role } };
     }),

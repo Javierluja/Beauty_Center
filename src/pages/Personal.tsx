@@ -27,6 +27,8 @@ import {
   Mail,
   Trash2,
   Sparkles,
+  Activity,
+  Monitor,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,6 +44,7 @@ export default function Personal() {
   });
 
   const { data: users, isLoading } = trpc.user.list.useQuery();
+  const { data: logs, isLoading: loadingLogs } = trpc.user.accessLogs.useQuery();
 
   // Cambiado: Ahora usamos user.create (Administrativo) en lugar de auth.register (Público)
   const createMutation = trpc.user.create.useMutation({
@@ -164,6 +167,62 @@ export default function Personal() {
             </Card>
           ))
         }
+      </div>
+
+      <div className="mt-12">
+        <div className="flex items-center gap-2 mb-4">
+          <Activity className="h-6 w-6 text-primary" />
+          <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight">Historial de Accesos</h2>
+        </div>
+        
+        <Card className="border-border shadow-xl rounded-3xl overflow-hidden bg-card/50">
+          <CardContent className="p-0 overflow-x-auto no-scrollbar">
+            <table className="w-full text-left text-sm md:text-base border-collapse">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr>
+                  <th className="px-6 py-4 font-black uppercase text-xs text-muted-foreground w-1/4">Fecha / Hora</th>
+                  <th className="px-6 py-4 font-black uppercase text-xs text-muted-foreground w-1/3">Usuario</th>
+                  <th className="px-6 py-4 font-black uppercase text-xs text-muted-foreground">Acción</th>
+                  <th className="px-6 py-4 font-black uppercase text-xs text-muted-foreground text-right">Dirección IP</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loadingLogs ? (
+                  <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Cargando registros...</td></tr>
+                ) : logs?.length === 0 ? (
+                  <tr><td colSpan={4} className="p-6 text-center text-muted-foreground font-medium">No hay registros de acceso.</td></tr>
+                ) : (
+                  logs?.map((log: any) => (
+                    <tr key={log.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-xs text-slate-600 whitespace-nowrap">
+                        {new Date(log.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <UserCircle className="h-5 w-5 text-primary" />
+                          <div className="flex flex-col">
+                            <span className="font-bold text-sm uppercase">{log.userName}</span>
+                            <span className="text-[10px] text-muted-foreground">{log.userEmail}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary font-bold text-[10px] uppercase">
+                          {log.action}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground font-mono bg-muted px-2 py-1 rounded-lg ml-auto w-fit">
+                          <Monitor className="h-3 w-3" /> {log.ipAddress || "Desconocida"}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
       </div>
 
       <Dialog open={permDialogOpen} onOpenChange={setPermDialogOpen}>
