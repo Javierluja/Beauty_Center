@@ -63,7 +63,14 @@ export const customerRouter = createRouter({
       return updateClient(id, data);
     }),
 
-  delete: adminQuery
+  delete: authedQuery
+    .use(async ({ ctx, next }) => {
+      // allow both admin_pro and admin
+      if (ctx.user?.role !== "admin_pro" && ctx.user?.role !== "admin") {
+        throw new Error("No tienes permisos para eliminar clientes");
+      }
+      return next({ ctx });
+    })
     .input(z.number())
     .mutation(({ input }) => deleteClient(input)),
 
