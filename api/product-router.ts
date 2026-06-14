@@ -65,7 +65,14 @@ export const productRouter = createRouter({
       return updateProduct(id, data);
     }),
 
-  delete: adminQuery
+  delete: authedQuery
+    .use(async ({ ctx, next }) => {
+      // allow both admin_pro and admin
+      if (ctx.user?.role !== "admin_pro" && ctx.user?.role !== "admin") {
+        throw new Error("No tienes permisos para eliminar productos");
+      }
+      return next({ ctx });
+    })
     .input(z.number())
     .mutation(({ input }) => deleteProduct(input)),
 
