@@ -55,7 +55,7 @@ export const sessionRouter = createRouter({
         .select()
         .from(sessionPacks)
         .where(eq(sessionPacks.id, input.packId))
-        .then(res => res[0]);
+        .then((res: any) => res[0]);
 
       if (!pack || pack.remainingSessions <= 0) {
         throw new Error("No sessions remaining");
@@ -116,7 +116,7 @@ export const sessionRouter = createRouter({
         .select()
         .from(sessionPacks)
         .where(eq(sessionPacks.id, input.packId))
-        .then(res => res[0]);
+        .then((res: any) => res[0]);
 
       if (!pack) throw new Error("Plan no encontrado");
 

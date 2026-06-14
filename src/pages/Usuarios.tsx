@@ -129,7 +129,7 @@ export default function Usuarios() {
             </div>
             <div className="flex gap-4 pt-4">
               <Button 
-                onClick={() => createUserMutation.mutate({ name: newName, email: newEmail, role: newRole })}
+                onClick={() => createUserMutation.mutate({ name: newName, email: newEmail, password: "password123", role: newRole as any })}
                 disabled={!newName || !newEmail || createUserMutation.isPending}
                 className="bg-primary hover:bg-primary/90 font-black px-8 rounded-xl h-12 shadow-lg uppercase text-xs"
               >

@@ -25,7 +25,7 @@ export const purchaseRouter = createRouter({
         const insertId = (result as any)[0].insertId;
         const rows = await db.select().from(suppliers).where(eq(suppliers.id, Number(insertId)));
         return rows[0];
-      } catch (err) {
+      } catch (err: any) {
         console.error("[API] Error creando proveedor:", err);
         throw new Error("No se pudo crear el proveedor: " + err.message);
       }
@@ -109,7 +109,7 @@ export const purchaseRouter = createRouter({
         }
         
         return { id: purchaseId };
-      } catch (err) {
+      } catch (err: any) {
         console.error("[API] Error creando compra:", err);
         throw new Error("No se pudo registrar la factura: " + err.message);
       }

@@ -64,7 +64,7 @@ export const authRouter = createRouter({
     const opts = getSessionCookieOptions(ctx.req.headers);
     ctx.resHeaders.append(
       "set-cookie",
-      cookie.serialize(Session.cookieName, token, opts),
+      cookie.serialize(Session.cookieName, token, opts as any),
     );
       
       const ipAddress = ctx.req.headers instanceof Headers 
@@ -123,7 +123,7 @@ export const authRouter = createRouter({
     ctx.resHeaders.append(
       "set-cookie",
       cookie.serialize(Session.cookieName, "", {
-        ...opts,
+        ...(opts as any),
         maxAge: 0,
       }),
     );

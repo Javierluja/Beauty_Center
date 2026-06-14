@@ -83,7 +83,7 @@ export const userRouter = createRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const db = getDb();
-      const user = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1).then(r => r[0]);
+      const user = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1).then((r: any) => r[0]);
       if (!user) throw new Error("Usuario no encontrado");
 
       const valid = await bcrypt.compare(input.currentPassword, user.password);
