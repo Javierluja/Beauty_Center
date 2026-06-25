@@ -39,7 +39,7 @@ export const serviceRouter = createRouter({
     .mutation(async ({ input }) => {
       console.log("[API] Recibida petición para crear servicio:", input.name);
       try {
-        const result = await createService(input);
+        const result = await createService(input as any);
         console.log("[API] Servicio creado exitosamente:", result);
         return result;
       } catch (err) {
@@ -76,5 +76,3 @@ export const serviceRouter = createRouter({
     .input(z.number())
     .mutation(({ input }) => deleteService(input)),
 });
-
-

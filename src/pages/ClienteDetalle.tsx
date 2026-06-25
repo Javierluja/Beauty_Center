@@ -43,7 +43,7 @@ export default function ClienteDetalle() {
   const [sessionCount, setSessionCount] = useState(10);
   const [customTitle, setCustomTitle] = useState("");
 
-  const { data: client, isLoading: clientLoading } = trpc.customers.get.useQuery(clientIdNum);
+  const { data: client, isLoading: clientLoading } = trpc.customers.byId.useQuery(clientIdNum);
   const { data: packs, isLoading: packsLoading } = trpc.session.listByClient.useQuery(clientIdNum);
   const { data: services } = trpc.service.list.useQuery({ active: true });
 

@@ -39,7 +39,7 @@ export default function Clientes() {
   const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "", birthDate: "" });
 
   const { data: clients, isLoading } = trpc.customers.list.useQuery(
-    search ? { search } : undefined
+    search ? search : undefined
   );
 
   // Queries para el historial

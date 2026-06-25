@@ -29,7 +29,7 @@ export const customerRouter = createRouter({
     )
     .mutation(async ({ input }) => {
       console.log("[API] Creando cliente:", input.name);
-      const client = await createClient(input);
+      const client = await createClient(input as any);
       
       try {
         if (client) {

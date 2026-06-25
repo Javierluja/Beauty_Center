@@ -280,7 +280,8 @@ export default function Dashboard() {
                   const today = new Date();
                   const upcomingBirthdays = clientsList.filter((client: any) => {
                     if (!client.birthDate) return false;
-                    const [y, m, d] = client.birthDate.split('-').map(Number);
+                    const dateStr = typeof client.birthDate === 'string' ? client.birthDate : new Date(client.birthDate).toISOString().split('T')[0];
+                    const [y, m, d] = dateStr.split('-').map(Number);
                     const bDay = new Date(today.getFullYear(), m - 1, d);
                     // Si ya pasó este año, vemos si faltan menos de 7 días para el próximo
                     if (bDay.getTime() < new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) {
@@ -290,8 +291,10 @@ export default function Dashboard() {
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     return diffDays <= 7;
                   }).sort((a: any, b: any) => {
-                    const [ya, ma, da] = a.birthDate.split('-').map(Number);
-                    const [yb, mb, db] = b.birthDate.split('-').map(Number);
+                    const dateStrA = typeof a.birthDate === 'string' ? a.birthDate : new Date(a.birthDate).toISOString().split('T')[0];
+                    const dateStrB = typeof b.birthDate === 'string' ? b.birthDate : new Date(b.birthDate).toISOString().split('T')[0];
+                    const [ya, ma, da] = dateStrA.split('-').map(Number);
+                    const [yb, mb, db] = dateStrB.split('-').map(Number);
                     let bDayA = new Date(today.getFullYear(), ma - 1, da);
                     let bDayB = new Date(today.getFullYear(), mb - 1, db);
                     if (bDayA.getTime() < today.getTime()) bDayA.setFullYear(today.getFullYear() + 1);
@@ -309,7 +312,8 @@ export default function Dashboard() {
                   }
 
                   return upcomingBirthdays.map((client: any) => {
-                    const [y, m, d] = client.birthDate.split('-').map(Number);
+                    const dateStr = typeof client.birthDate === 'string' ? client.birthDate : new Date(client.birthDate).toISOString().split('T')[0];
+                    const [y, m, d] = dateStr.split('-').map(Number);
                     const isToday = m === today.getMonth() + 1 && d === today.getDate();
                     
                     return (

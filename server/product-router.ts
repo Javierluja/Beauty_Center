@@ -43,7 +43,7 @@ export const productRouter = createRouter({
     )
     .mutation(({ input }) => {
       console.log("[API] Creando producto:", input.name);
-      return createProduct(input);
+      return createProduct(input as any);
     }),
 
   update: authedQuery
