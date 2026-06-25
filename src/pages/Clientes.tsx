@@ -85,12 +85,20 @@ export default function Clientes() {
 
   function handleEdit(client: any) {
     setEditingId(client.id);
+    
+    let formattedDate = "";
+    if (client.birthDate) {
+      formattedDate = typeof client.birthDate === 'string' 
+        ? client.birthDate.split('T')[0] 
+        : new Date(client.birthDate).toISOString().split('T')[0];
+    }
+
     setForm({
       name: client.name,
       phone: client.phone,
       email: client.email || "",
       notes: client.notes || "",
-      birthDate: client.birthDate || "",
+      birthDate: formattedDate,
     });
     setDialogOpen(true);
   }
@@ -189,7 +197,15 @@ export default function Clientes() {
                     <td className="px-6 py-4">
                       <p className="font-semibold text-foreground text-sm">{client.phone}</p>
                       <p className="text-[10px] text-muted-foreground">{client.email || 'Sin email'}</p>
-                      {client.birthDate && <p className="text-[10px] font-black text-pink-500 uppercase mt-1">🎂 {new Date(client.birthDate).toLocaleDateString()}</p>}
+                      {client.birthDate && (
+                        <p className="text-[10px] font-black text-pink-500 uppercase mt-1">
+                          🎂 {(() => {
+                            const dateStr = typeof client.birthDate === 'string' ? client.birthDate : new Date(client.birthDate).toISOString();
+                            const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
+                            return new Date(y, m - 1, d).toLocaleDateString();
+                          })()}
+                        </p>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
