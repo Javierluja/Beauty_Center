@@ -341,7 +341,22 @@ export default function Ventas() {
         {/* CIERRE DE VENTA */}
         <div className="p-5 bg-muted/50 border-t border-border space-y-4">
 
-          <div className="space-y-2 pt-3 border-t border-border">
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <Label className="text-[11px] font-black uppercase text-slate-800">Descuento ($)</Label>
+            <Input 
+              type="number" 
+              min="0" 
+              value={discount} 
+              onChange={(e) => setDiscount(e.target.value)}
+              className="w-32 h-9 text-right font-black rounded-lg border-primary/20 text-sm"
+            />
+          </div>
+
+          <div className="space-y-2 pt-1">
+            <div className="flex justify-between items-center text-muted-foreground text-xs">
+              <span>Subtotal</span>
+              <span className="text-foreground font-medium">${cartTotal.toLocaleString()}</span>
+            </div>
             <div className="flex justify-between items-center text-muted-foreground text-xs">
               <span>Neto</span>
               <span className="text-foreground font-medium">${neto.toLocaleString()}</span>

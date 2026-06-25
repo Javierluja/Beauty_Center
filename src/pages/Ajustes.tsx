@@ -53,7 +53,7 @@ export default function Ajustes() {
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Configuración</h1>
-        <p className="text-xs text-muted-foreground mt-1">Personaliza tu experiencia en Beauty Center</p>
+        <p className="text-xs text-muted-foreground mt-1">Personaliza tu experiencia en BeautyLife Center</p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

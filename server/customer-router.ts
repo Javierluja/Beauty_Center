@@ -24,6 +24,7 @@ export const customerRouter = createRouter({
         phone: z.union([z.string(), z.number()]).transform(v => String(v)),
         email: z.string().email().optional().or(z.literal("")).transform(v => v || undefined),
         notes: z.string().optional().default(""),
+        birthDate: z.string().optional().or(z.literal("")).transform(v => v || undefined),
       })
     )
     .mutation(async ({ input }) => {
@@ -56,6 +57,7 @@ export const customerRouter = createRouter({
         phone: z.union([z.string(), z.number()]).transform(v => String(v)).optional(),
         email: z.string().email().optional().or(z.literal("")).transform(v => v || undefined).optional(),
         notes: z.string().optional(),
+        birthDate: z.string().optional().or(z.literal("")).transform(v => v || undefined).optional(),
       })
     )
     .mutation(({ input }) => {

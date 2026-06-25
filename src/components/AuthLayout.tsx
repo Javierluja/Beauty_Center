@@ -62,7 +62,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background p-4">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full bg-card rounded-3xl shadow-xl border border-primary/20">
-          <h1 className="text-3xl font-black text-primary tracking-tighter uppercase">Beauty Center Ventas</h1>
+          <h1 className="text-3xl font-black text-primary tracking-tighter uppercase">BeautyLife Center Ventas</h1>
           <Button onClick={() => window.location.href = LOGIN_PATH} size="lg" className="w-full bg-primary font-black">
             INICIAR SESIÓN
           </Button>
@@ -112,7 +112,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               </svg>
             </div>
             <div className="min-w-0">
-              <span className="font-black text-sm text-foreground tracking-tight block leading-tight">Beauty Center</span>
+              <span className="font-black text-sm text-foreground tracking-tight block leading-tight">BeautyLife Center</span>
               <span className="text-[9px] font-bold text-primary uppercase tracking-widest block">Ventas</span>
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               </svg>
             </div>
             <div>
-              <span className="font-black text-xs text-foreground uppercase tracking-tight block leading-none">Beauty Center</span>
+              <span className="font-black text-xs text-foreground uppercase tracking-tight block leading-none">BeautyLife Center</span>
               <span className="text-[8px] font-bold text-primary uppercase tracking-widest block mt-0.5">Ventas</span>
             </div>
           </div>

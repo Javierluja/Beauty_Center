@@ -103,7 +103,7 @@ export default function Notificaciones() {
     if (!d) return;
     
     const time = String(appt.appointmentTime || "").slice(0, 5);
-    const message = `Hola ${appt.clientName}! 🌸 Te recordamos tu cita de ${appt.serviceName} el ${d.toLocaleDateString("es-ES")} a las ${time}. ¡Te esperamos en Beauty Center! ✨`;
+    const message = `Hola ${appt.clientName}! 🌸 Te recordamos tu cita de ${appt.serviceName} el ${d.toLocaleDateString("es-ES")} a las ${time}. ¡Te esperamos en BeautyLife Center! ✨`;
     
     createNotification.mutate({
       clientId: appt.clientId,

@@ -52,7 +52,7 @@ export default function Login() {
             </svg>
           </div>
           <div>
-            <h1 className="text-3xl font-black text-foreground tracking-tighter uppercase">Beauty Center Ventas</h1>
+            <h1 className="text-3xl font-black text-foreground tracking-tighter uppercase">BeautyLife Center Ventas</h1>
             <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">Acceso para personal</p>
           </div>
         </div>

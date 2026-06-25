@@ -361,7 +361,7 @@ export default function Sesiones() {
                         size="sm"
                         className="border-border text-muted-foreground hover:text-foreground hover:border-primary/30 font-medium"
                         onClick={() => {
-                          const msg = `Hola ${client?.name}! Te escribo de Beauty Center. Registramos una sesión de ${pack.customTitle}. Te quedan ${pack.remainingSessions} sesiones. ¡Te esperamos!`;
+                          const msg = `Hola ${client?.name}! Te escribo de BeautyLife Center. Registramos una sesión de ${pack.customTitle}. Te quedan ${pack.remainingSessions} sesiones. ¡Te esperamos!`;
                           window.open(`https://wa.me/${client?.phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
                         }}
                       >

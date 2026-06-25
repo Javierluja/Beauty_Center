@@ -288,7 +288,7 @@ export default function Agenda() {
                             onClick={() => {
                               const d = parseDateSafe(appt.appointmentDate);
                               const time = String(appt.appointmentTime || "").slice(0, 5);
-                              const msg = `Hola ${appt.clientName}! 🌸 Te escribimos de Beauty Center para recordar tu cita de ${appt.serviceName} el día ${d?.toLocaleDateString("es-ES")} a las ${time}. ¡Te esperamos! ✨`;
+                              const msg = `Hola ${appt.clientName}! 🌸 Te escribimos de BeautyLife Center para recordar tu cita de ${appt.serviceName} el día ${d?.toLocaleDateString("es-ES")} a las ${time}. ¡Te esperamos! ✨`;
                               window.open(`https://wa.me/${appt.clientPhone?.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
                             }}
                           >

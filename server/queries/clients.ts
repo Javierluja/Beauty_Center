@@ -31,6 +31,7 @@ export async function createClient(data: {
   phone: string;
   email?: string;
   notes?: string;
+  birthDate?: string;
 }) {
   try {
     const db = getDb();
@@ -52,6 +53,7 @@ export async function updateClient(
     email?: string;
     notes?: string;
     balance?: string;
+    birthDate?: string;
   }
 ) {
   const db = getDb();

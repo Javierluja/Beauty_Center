@@ -36,7 +36,7 @@ export default function Clientes() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "", birthDate: "" });
 
   const { data: clients, isLoading } = trpc.customers.list.useQuery(
     search ? { search } : undefined
@@ -79,7 +79,7 @@ export default function Clientes() {
   });
 
   function resetForm() {
-    setForm({ name: "", phone: "", email: "", notes: "" });
+    setForm({ name: "", phone: "", email: "", notes: "", birthDate: "" });
     setEditingId(null);
   }
 
@@ -90,6 +90,7 @@ export default function Clientes() {
       phone: client.phone,
       email: client.email || "",
       notes: client.notes || "",
+      birthDate: client.birthDate || "",
     });
     setDialogOpen(true);
   }
@@ -136,6 +137,10 @@ export default function Clientes() {
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase">Notas / Alergias</Label>
                 <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Ej. Alérgica al tinte..." className="rounded-xl" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase">Fecha de Nacimiento</Label>
+                <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} className="rounded-xl" />
               </div>
               <Button type="submit" className="w-full bg-primary font-black h-12 shadow-xl rounded-2xl mt-4 uppercase">
                 {editingId ? "Actualizar" : "Crear Cliente"} ✨
@@ -184,6 +189,7 @@ export default function Clientes() {
                     <td className="px-6 py-4">
                       <p className="font-semibold text-foreground text-sm">{client.phone}</p>
                       <p className="text-[10px] text-muted-foreground">{client.email || 'Sin email'}</p>
+                      {client.birthDate && <p className="text-[10px] font-black text-pink-500 uppercase mt-1">🎂 {new Date(client.birthDate).toLocaleDateString()}</p>}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -191,6 +197,13 @@ export default function Clientes() {
                         <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-green-600 hover:bg-green-50 rounded-lg border border-green-200">
                           <a href={`https://wa.me/${client.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /></a>
                         </Button>
+                        {client.birthDate && (
+                          <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-pink-500 hover:bg-pink-50 rounded-lg border border-pink-200">
+                            <a href={`https://wa.me/${client.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`¡Hola ${client.name.split(' ')[0]}! 🌸 Te enviamos un gran saludo de cumpleaños de parte de todo el equipo de BeautyLife Center. ¡Que tengas un hermoso día! ✨`)}`} target="_blank" rel="noreferrer">
+                              <span className="text-sm">🎂</span>
+                            </a>
+                          </Button>
+                        )}
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(client)} className="h-9 w-9 text-primary hover:bg-primary/10 rounded-lg border border-primary/10"><Pencil className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => { if(confirm("¿Eliminar?")) deleteMutation.mutate(client.id) }} className="h-9 w-9 text-destructive hover:bg-destructive/10 rounded-lg border border-destructive/10"><Trash2 className="h-4 w-4" /></Button>
                       </div>
