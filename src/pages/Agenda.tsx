@@ -31,6 +31,7 @@ import {
   Scissors,
   Sparkles,
   Calendar as CalendarIcon,
+  Gift,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -326,6 +327,52 @@ export default function Agenda() {
                 <p className="text-xs text-muted-foreground">Día libre ✨</p>
               </div>
             )}
+          </div>
+
+          {/* Cumpleaños del Mes */}
+          <div className="pt-4 border-t border-border mt-4">
+            <h3 className="text-sm font-black text-pink-500 uppercase tracking-widest flex items-center gap-2 mb-3">
+              <Gift className="h-4 w-4" /> Cumpleaños del Mes
+            </h3>
+            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 no-scrollbar">
+              {clients?.filter(c => {
+                if (!c.birthDate) return false;
+                const [y, m, d] = c.birthDate.split('-').map(Number);
+                return (m - 1) === month;
+              }).sort((a, b) => {
+                const da = Number(a.birthDate?.split('-')[2]);
+                const db = Number(b.birthDate?.split('-')[2]);
+                return da - db;
+              }).map(client => {
+                const d = Number(client.birthDate?.split('-')[2]);
+                const isToday = d === new Date().getDate() && month === new Date().getMonth();
+                return (
+                  <div key={client.id} className={`flex items-center justify-between p-2 rounded-xl border ${isToday ? "bg-pink-500/10 border-pink-500/20" : "bg-card border-border"}`}>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xl ${isToday ? "" : "opacity-50"}`}>🎂</span>
+                      <div>
+                        <p className={`text-xs font-bold uppercase ${isToday ? "text-pink-600" : "text-foreground"}`}>{client.name}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase">{d} de {monthNames[month]}</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg shrink-0"
+                      onClick={() => {
+                        const msg = `¡Hola ${client.name.split(' ')[0]}! 🌸 Te enviamos un gran saludo de cumpleaños de parte de todo el equipo de BeautyLife Center. ¡Que tengas un hermoso día! ✨`;
+                        window.open(`https://wa.me/${client.phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+                      }}
+                    >
+                      <MessageCircle className="h-3 w-3" />
+                    </Button>
+                  </div>
+                );
+              })}
+              {(!clients || clients.filter(c => c.birthDate && Number(c.birthDate.split('-')[1]) - 1 === month).length === 0) && (
+                <p className="text-[10px] text-muted-foreground uppercase text-center py-4">No hay cumpleaños este mes</p>
+              )}
+            </div>
           </div>
         </div>
       </div>

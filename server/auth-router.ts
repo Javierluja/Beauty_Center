@@ -89,7 +89,23 @@ export const authRouter = createRouter({
       email: z.string().email(),
       password: z.string().min(6),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      // Consultamos si ya hay usuarios para decidir el rol inicial de forma segura
+      const { getDb } = await import("./queries/connection.js");
+      const { users } = await import("../db/schema.js");
+      const db = getDb();
+      const existingUsers = await db.select().from(users).limit(1);
+      
+      // Si ya existen usuarios, SOLO un admin_pro puede crear más cuentas
+      if (existingUsers.length > 0) {
+        if (!ctx.user || ctx.user.role !== "admin_pro") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Registro cerrado. Solo los administradores pueden crear nuevos usuarios."
+          });
+        }
+      }
+
       const existing = await findUserByEmail(input.email);
       if (existing) {
         throw new TRPCError({
@@ -100,13 +116,7 @@ export const authRouter = createRouter({
 
       const hashedPassword = await bcrypt.hash(input.password, 10);
       
-      // Consultamos si ya hay usuarios para decidir el rol inicial de forma segura
-      const { getDb } = await import("./queries/connection.js");
-      const { users } = await import("../db/schema.js");
-      const db = getDb();
-      const existingUsers = await db.select().from(users).limit(1);
-      
-      const role = existingUsers.length === 0 ? "admin_pro" : "ventas"; // Evita que se registren como admin si ya está en uso
+      const role = existingUsers.length === 0 ? "admin_pro" : "ventas";
       
       const newUser = await createUser({
         name: input.name,

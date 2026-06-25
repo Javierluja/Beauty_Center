@@ -261,6 +261,88 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        {/* Cumpleaños de Hoy */}
+        <Card className="border border-border bg-card overflow-hidden">
+          <CardHeader className="border-b border-border px-6 py-4">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2 text-pink-500">
+              <Gift className="h-4 w-4" />
+              Cumpleaños (Próximos 7 días)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 h-[280px] overflow-y-auto no-scrollbar">
+            {loadingClients ? (
+              <div className="space-y-2">
+                {[1, 2].map(i => <Skeleton key={i} className="h-14 w-full rounded-xl bg-muted" />)}
+              </div>
+            ) : clientsList && clientsList.length > 0 ? (
+              <div className="space-y-3">
+                {(() => {
+                  const today = new Date();
+                  const upcomingBirthdays = clientsList.filter((client: any) => {
+                    if (!client.birthDate) return false;
+                    const [y, m, d] = client.birthDate.split('-').map(Number);
+                    const bDay = new Date(today.getFullYear(), m - 1, d);
+                    // Si ya pasó este año, vemos si faltan menos de 7 días para el próximo
+                    if (bDay.getTime() < new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) {
+                      bDay.setFullYear(today.getFullYear() + 1);
+                    }
+                    const diffTime = Math.abs(bDay.getTime() - today.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays <= 7;
+                  }).sort((a: any, b: any) => {
+                    const [ya, ma, da] = a.birthDate.split('-').map(Number);
+                    const [yb, mb, db] = b.birthDate.split('-').map(Number);
+                    let bDayA = new Date(today.getFullYear(), ma - 1, da);
+                    let bDayB = new Date(today.getFullYear(), mb - 1, db);
+                    if (bDayA.getTime() < today.getTime()) bDayA.setFullYear(today.getFullYear() + 1);
+                    if (bDayB.getTime() < today.getTime()) bDayB.setFullYear(today.getFullYear() + 1);
+                    return bDayA.getTime() - bDayB.getTime();
+                  });
+
+                  if (upcomingBirthdays.length === 0) {
+                    return (
+                      <div className="flex flex-col items-center justify-center h-32 gap-2 text-muted-foreground/30">
+                        <Gift className="h-8 w-8" />
+                        <p className="text-[10px] font-medium uppercase tracking-widest">Sin cumpleaños cercanos</p>
+                      </div>
+                    );
+                  }
+
+                  return upcomingBirthdays.map((client: any) => {
+                    const [y, m, d] = client.birthDate.split('-').map(Number);
+                    const isToday = m === today.getMonth() + 1 && d === today.getDate();
+                    
+                    return (
+                      <div key={client.id} className="flex items-center gap-4 px-4 py-3 bg-accent/50 rounded-xl border border-border">
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${isToday ? "bg-pink-500 text-white shadow-lg shadow-pink-500/20" : "bg-pink-500/10 text-pink-500"}`}>
+                          <span className="text-xl leading-none">🎂</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-bold text-foreground uppercase truncate tracking-tight">{client.name}</p>
+                          <p className="text-[10px] text-pink-500 font-black uppercase tracking-widest mt-0.5">
+                            {isToday ? "¡HOY!" : `${d} de ${new Date(2000, m - 1).toLocaleDateString('es-ES', { month: 'long' })}`}
+                          </p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg shrink-0"
+                          onClick={() => {
+                            const msg = `¡Hola ${client.name.split(' ')[0]}! 🌸 Te enviamos un gran saludo de cumpleaños de parte de todo el equipo de BeautyLife Center. ¡Que tengas un hermoso día! ✨`;
+                            window.open(`https://wa.me/${client.phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+                          }}
+                        >
+                          <Smartphone className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+
         {/* Accesos rápidos */}
         <div className="grid grid-cols-2 gap-3">
           {[
