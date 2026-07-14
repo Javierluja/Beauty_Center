@@ -25,7 +25,9 @@ import {
   History,
   ShoppingBag,
   Calendar,
+  Upload,
 } from "lucide-react";
+import Papa from "papaparse";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Clientes() {
@@ -77,6 +79,41 @@ export default function Clientes() {
       toast({ title: "Cliente eliminado" });
     },
   });
+
+  const { data: user } = trpc.auth.me.useQuery();
+
+  const bulkCreateMutation = trpc.customers.bulkCreate.useMutation({
+    onSuccess: (count) => {
+      utils.customers.list.invalidate();
+      toast({ title: `¡Importados ${count} clientes! ✨` });
+    },
+    onError: (err) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const data = results.data.map((row: any) => ({
+          name: row.name,
+          phone: row.phone,
+          email: row.email,
+          notes: row.notes,
+          birthDate: row.birthDate,
+          rut: row.rut,
+          address: row.address,
+          profession: row.profession
+        }));
+        if(confirm(`¿Estás seguro de importar ${data.length} clientes?`)) {
+          bulkCreateMutation.mutate(data);
+        }
+        e.target.value = ''; // reset
+      }
+    });
+  }
 
   function resetForm() {
     setForm({ name: "", phone: "", email: "", notes: "", birthDate: "", rut: "", address: "", profession: "" });
@@ -130,6 +167,14 @@ export default function Clientes() {
               <Plus className="h-5 w-5 mr-2" /> NUEVO CLIENTE
             </Button>
           </DialogTrigger>
+          {user?.role === "admin_pro" && (
+            <div className="relative inline-block w-full md:w-auto">
+              <Input type="file" accept=".csv" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" onChange={handleFileUpload} />
+              <Button variant="outline" className="h-12 border-dashed border-2 px-8 font-black rounded-2xl w-full text-primary border-primary/20 hover:bg-primary/5">
+                <Upload className="h-5 w-5 mr-2" /> IMPORTAR CSV
+              </Button>
+            </div>
+          )}
           <DialogContent className="max-w-md w-[95vw] rounded-3xl">
             <DialogHeader><DialogTitle className="font-black text-primary uppercase">Registro de Cliente</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 pt-2">

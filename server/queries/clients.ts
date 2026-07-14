@@ -73,3 +73,23 @@ export async function deleteClient(id: number) {
 }
 
 
+
+
+export async function bulkCreateClients(clientsData: any[]) {
+  if (!clientsData.length) return 0;
+  const db = getDb();
+  
+  const mappedData = clientsData.map(c => ({
+    name: c.name,
+    phone: c.phone || "",
+    email: c.email || null,
+    notes: c.notes || null,
+    birthDate: c.birthDate || null,
+    rut: c.rut || null,
+    address: c.address || null,
+    profession: c.profession || null,
+  }));
+  
+  const result = await db.insert(customers).values(mappedData);
+  return (result as any)[0].affectedRows;
+}

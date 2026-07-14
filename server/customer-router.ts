@@ -107,6 +107,19 @@ export const customerRouter = createRouter({
     .mutation(async ({ input }) => {
       return updateClient(input.id, { balance: input.balance.toString() });
     }),
+
+  bulkCreate: adminQuery
+    .use(async ({ ctx, next }) => {
+      if (ctx.user?.role !== "admin_pro") {
+        throw new Error("Solo el admin_pro puede hacer carga masiva");
+      }
+      return next({ ctx });
+    })
+    .input(z.array(z.any()))
+    .mutation(async ({ input }) => {
+      const { bulkCreateClients } = await import("./queries/clients.js");
+      return bulkCreateClients(input);
+    }),
 });
 
 
