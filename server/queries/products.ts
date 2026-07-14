@@ -97,3 +97,22 @@ export async function updateProductStock(id: number, quantity: number) {
 }
 
 
+
+export async function bulkCreateProducts(productsData: any[]) {
+  if (!productsData.length) return 0;
+  const db = getDb();
+  
+  const mappedData = productsData.map(p => ({
+    name: p.name,
+    description: p.description || "",
+    sku: p.sku || "",
+    price: String(Math.floor(Number(p.price) || 0)),
+    stock: Number(p.stock) || 0,
+    minStock: Number(p.minStock) || 5,
+    category: p.category || "General",
+    isActive: p.isActive !== false ? 1 : 0
+  }));
+  
+  const result = await db.insert(products).values(mappedData);
+  return (result as any)[0].affectedRows;
+}

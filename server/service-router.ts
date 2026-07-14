@@ -75,4 +75,17 @@ export const serviceRouter = createRouter({
     })
     .input(z.number())
     .mutation(({ input }) => deleteService(input)),
+
+  bulkCreate: adminQuery
+    .use(async ({ ctx, next }) => {
+      if (ctx.user?.role !== "admin_pro") {
+        throw new Error("Solo el admin_pro puede hacer carga masiva");
+      }
+      return next({ ctx });
+    })
+    .input(z.array(z.any()))
+    .mutation(async ({ input }) => {
+      const { bulkCreateServices } = await import("./queries/services.js");
+      return bulkCreateServices(input);
+    }),
 });

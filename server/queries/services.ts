@@ -82,3 +82,21 @@ export async function deleteService(id: number) {
 }
 
 
+
+
+export async function bulkCreateServices(servicesData: any[]) {
+  if (!servicesData.length) return 0;
+  const db = getDb();
+  
+  const mappedData = servicesData.map(s => ({
+    name: s.name,
+    description: s.description || "",
+    price: String(Math.floor(Number(s.price) || 0)),
+    duration: Number(s.duration) || 30,
+    category: s.category || "General",
+    isActive: s.isActive !== false ? 1 : 0
+  }));
+  
+  const result = await db.insert(services).values(mappedData);
+  return (result as any)[0].affectedRows;
+}

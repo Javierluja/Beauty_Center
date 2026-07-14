@@ -84,6 +84,19 @@ export const productRouter = createRouter({
       })
     )
     .mutation(({ input }) => updateProductStock(input.id, input.quantity)),
+
+  bulkCreate: adminQuery
+    .use(async ({ ctx, next }) => {
+      if (ctx.user?.role !== "admin_pro") {
+        throw new Error("Solo el admin_pro puede hacer carga masiva");
+      }
+      return next({ ctx });
+    })
+    .input(z.array(z.any()))
+    .mutation(async ({ input }) => {
+      const { bulkCreateProducts } = await import("./queries/products.js");
+      return bulkCreateProducts(input);
+    }),
 });
 
 
