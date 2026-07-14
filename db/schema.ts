@@ -29,6 +29,9 @@ export const customers = mysqlTable("customers", {
   email: varchar("email", { length: 255 }),
   notes: text("notes"),
   birthDate: date("birthDate"),
+  rut: varchar("rut", { length: 20 }),
+  address: text("address"),
+  profession: varchar("profession", { length: 255 }),
   balance: decimal("balance", { precision: 10, scale: 2 }).default("0.00").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

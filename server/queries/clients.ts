@@ -32,6 +32,9 @@ export async function createClient(data: {
   email?: string;
   notes?: string;
   birthDate?: string;
+  rut?: string;
+  address?: string;
+  profession?: string;
 }) {
   try {
     const db = getDb();
@@ -54,6 +57,9 @@ export async function updateClient(
     notes?: string;
     balance?: string;
     birthDate?: string;
+    rut?: string;
+    address?: string;
+    profession?: string;
   }
 ) {
   const db = getDb();

@@ -25,6 +25,9 @@ export const customerRouter = createRouter({
         email: z.string().email().optional().or(z.literal("")).transform(v => v || undefined),
         notes: z.string().optional().default(""),
         birthDate: z.string().optional().or(z.literal("")).transform(v => v || undefined),
+        rut: z.string().optional().or(z.literal("")).transform(v => v || undefined),
+        address: z.string().optional().or(z.literal("")).transform(v => v || undefined),
+        profession: z.string().optional().or(z.literal("")).transform(v => v || undefined),
       })
     )
     .mutation(async ({ input }) => {
@@ -58,6 +61,9 @@ export const customerRouter = createRouter({
         email: z.string().email().optional().or(z.literal("")).transform(v => v || undefined).optional(),
         notes: z.string().optional(),
         birthDate: z.string().optional().or(z.literal("")).transform(v => v || undefined).optional(),
+        rut: z.string().optional().or(z.literal("")).transform(v => v || undefined).optional(),
+        address: z.string().optional().or(z.literal("")).transform(v => v || undefined).optional(),
+        profession: z.string().optional().or(z.literal("")).transform(v => v || undefined).optional(),
       })
     )
     .mutation(({ input }) => {

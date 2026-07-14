@@ -36,7 +36,7 @@ export default function Clientes() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "", birthDate: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "", birthDate: "", rut: "", address: "", profession: "" });
 
   const { data: clients, isLoading } = trpc.customers.list.useQuery(
     search ? search : undefined
@@ -79,7 +79,7 @@ export default function Clientes() {
   });
 
   function resetForm() {
-    setForm({ name: "", phone: "", email: "", notes: "", birthDate: "" });
+    setForm({ name: "", phone: "", email: "", notes: "", birthDate: "", rut: "", address: "", profession: "" });
     setEditingId(null);
   }
 
@@ -99,6 +99,9 @@ export default function Clientes() {
       email: client.email || "",
       notes: client.notes || "",
       birthDate: formattedDate,
+      rut: client.rut || "",
+      address: client.address || "",
+      profession: client.profession || "",
     });
     setDialogOpen(true);
   }
@@ -137,6 +140,18 @@ export default function Clientes() {
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase">Teléfono / WhatsApp *</Label>
                 <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Ej. 56912345678" className="rounded-xl" required />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase">RUT</Label>
+                <Input value={form.rut} onChange={(e) => setForm({ ...form, rut: e.target.value })} placeholder="Ej. 12345678-9" className="rounded-xl" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase">Dirección</Label>
+                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Ej. Av. Siempre Viva 123" className="rounded-xl" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase">Profesión</Label>
+                <Input value={form.profession} onChange={(e) => setForm({ ...form, profession: e.target.value })} placeholder="Ej. Arquitecta" className="rounded-xl" />
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase">Email</Label>
@@ -247,7 +262,54 @@ export default function Clientes() {
             </div>
           </div>
           
-          <Tabs defaultValue="history" className="p-4">
+          <div className="p-6 pb-2">
+            <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-3">Información Personal</h3>
+            <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-2xl border border-border/50">
+              <div>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground">RUT</p>
+                <p className="text-sm font-semibold">{selectedClient?.rut || '-'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground">Dirección</p>
+                <p className="text-sm font-semibold">{selectedClient?.address || '-'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground">Profesión</p>
+                <p className="text-sm font-semibold">{selectedClient?.profession || '-'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground">Cumpleaños</p>
+                <p className="text-sm font-semibold">
+                  {selectedClient?.birthDate ? (() => {
+                    const dateStr = typeof selectedClient.birthDate === 'string' ? selectedClient.birthDate : new Date(selectedClient.birthDate).toISOString();
+                    const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
+                    return new Date(y, m - 1, d).toLocaleDateString();
+                  })() : '-'}
+                </p>
+              </div>
+              
+              {/* COMPUTED FIRST SERVICE */}
+              {(() => {
+                const firstAppt = history && history.length > 0 
+                  ? [...history].sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime())[0]
+                  : null;
+                return (
+                  <>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-pink-500">1er Servicio</p>
+                      <p className="text-sm font-semibold text-pink-600">{firstAppt ? firstAppt.serviceName : '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-pink-500">Fecha 1er Servicio</p>
+                      <p className="text-sm font-semibold text-pink-600">{firstAppt ? new Date(firstAppt.appointmentDate).toLocaleDateString() : '-'}</p>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+          
+          <Tabs defaultValue="history" className="p-4 pt-2">
             <TabsList className="grid grid-cols-2 bg-primary/5 p-1 rounded-2xl h-12 mb-6">
               <TabsTrigger value="history" className="rounded-xl font-black text-xs uppercase flex items-center gap-2"><History className="h-4 w-4" /> Citas</TabsTrigger>
               <TabsTrigger value="sales" className="rounded-xl font-black text-xs uppercase flex items-center gap-2"><ShoppingBag className="h-4 w-4" /> Compras</TabsTrigger>
