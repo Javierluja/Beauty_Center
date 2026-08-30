@@ -9,81 +9,81 @@
 
 @layer base {
   :root {
-    /* ── Modo Claro (secundario) ─────────────────────────── */
-    --background:       325 40% 97%;   /* Rosa muy suave */
-    --foreground:       270 40% 12%;   /* Ciruela oscuro */
+    /* ── Modo Claro (Turquesa) ─────────────────────────── */
+    --background:       175 40% 97%;   /* Turquesa muy suave */
+    --foreground:       175 40% 12%;   /* Turquesa oscuro */
 
     --card:             0   0%  100%;
-    --card-foreground:  270 40% 12%;
+    --card-foreground:  175 40% 12%;
 
     --popover:          0   0%  100%;
-    --popover-foreground: 270 40% 12%;
+    --popover-foreground: 175 40% 12%;
 
-    --primary:          340 55% 51%;   /* Deep Rose #c0476b */
+    --primary:          175 60% 45%;   /* Turquesa principal */
     --primary-foreground: 0 0% 100%;
 
-    --secondary:        325 30% 92%;   /* Blush muy suave */
-    --secondary-foreground: 270 40% 20%;
+    --secondary:        175 30% 92%;   /* Cyan suave */
+    --secondary-foreground: 175 40% 20%;
 
-    --muted:            325 25% 93%;
-    --muted-foreground: 270 15% 45%;
+    --muted:            175 25% 93%;
+    --muted-foreground: 175 15% 45%;
 
-    --accent:           340 40% 90%;
-    --accent-foreground: 340 55% 35%;
+    --accent:           175 40% 90%;
+    --accent-foreground: 175 55% 35%;
 
     --destructive:      0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border:           325 25% 85%;
-    --input:            325 25% 85%;
-    --ring:             340 55% 51%;
+    --border:           175 25% 85%;
+    --input:            175 25% 85%;
+    --ring:             175 60% 45%;
     --radius:           1rem;
 
     /* Tarjetas admin en modo claro */
-    --admin-card:       325 40% 98%;
-    --card-elevated:    325 30% 96%;
+    --admin-card:       175 40% 98%;
+    --card-elevated:    175 30% 96%;
   }
 
   /* ============================================================
-     MODO OSCURO PRINCIPAL — "Midnight Plum × Blush Rose"
+     MODO OSCURO PRINCIPAL — "Midnight Turquoise"
      ============================================================ */
   .dark {
     /* ── Fondos base ─────────────────────────────────────── */
-    --background:       270 25% 6%;    /* #0c0a10 — Ciruela profundo */
-    --foreground:       290 25% 94%;   /* #f0ebf5 — Blanco perla cálido */
+    --background:       175 30% 6%;    /* Turquesa profundo casi negro */
+    --foreground:       175 25% 94%;   /* Blanco cyan cálido */
 
     /* ── Cards / Panels ──────────────────────────────────── */
-    --card:             270 22% 10%;   /* #161220 — Mauve oscuro */
-    --card-foreground:  290 25% 94%;
+    --card:             175 25% 10%;   /* Teal oscuro */
+    --card-foreground:  175 25% 94%;
 
-    --popover:          270 22% 10%;
-    --popover-foreground: 290 25% 94%;
+    --popover:          175 25% 10%;
+    --popover-foreground: 175 25% 94%;
 
-    /* ── Acento principal: Blush Rose ────────────────────── */
-    --primary:          340 60% 68%;   /* #e0708e — Blush Rose vibrante */
-    --primary-foreground: 270 25% 6%; /* Mismo que background para contraste */
+    /* ── Acento principal: Turquesa ────────────────────── */
+    --primary:          175 60% 50%;   /* Turquesa vibrante */
+    --primary-foreground: 175 30% 6%;  /* Mismo que background para contraste */
 
     /* ── Colores de soporte ──────────────────────────────── */
-    --secondary:        270 20% 16%;   /* #1e192a — Plum elevado */
-    --secondary-foreground: 290 25% 88%;
+    --secondary:        175 20% 16%;   /* Teal elevado */
+    --secondary-foreground: 175 25% 88%;
 
-    --muted:            270 20% 14%;   /* Entre card y secondary */
-    --muted-foreground: 285 15% 62%;   /* #a090b2 — Lavanda suave */
+    --muted:            175 20% 14%;   /* Entre card y secondary */
+    --muted-foreground: 175 15% 62%;   /* Gris cyan suave */
 
-    --accent:           270 25% 18%;   /* Hover sutil */
-    --accent-foreground: 340 60% 78%;  /* Blush más claro para texto */
+    --accent:           175 25% 18%;   /* Hover sutil */
+    --accent-foreground: 175 60% 78%;  /* Turquesa claro para texto */
 
     --destructive:      0 60% 52%;
-    --destructive-foreground: 290 25% 94%;
+    --destructive-foreground: 175 25% 94%;
 
     /* ── Bordes ──────────────────────────────────────────── */
-    --border:           270 20% 17%;   /* #231d31 — Plum border */
-    --input:            270 20% 17%;
-    --ring:             340 60% 68%;   /* Blush para focus rings */
+    --border:           175 20% 17%;   /* Teal border */
+    --input:            175 20% 17%;
+    --ring:             175 60% 50%;   /* Turquesa para focus rings */
 
     /* ── Variables de tarjetas admin ─────────────────────── */
-    --admin-card:       270 22% 10%;   /* = card, mauve oscuro */
-    --card-elevated:    270 20% 14%;   /* Ligeramente más claro que card */
+    --admin-card:       175 25% 10%;   /* = card, teal oscuro */
+    --card-elevated:    175 20% 14%;   /* Ligeramente más claro que card */
   }
 }
 
@@ -143,8 +143,8 @@
   .bg-primary-gradient {
     background: linear-gradient(
       135deg,
-      hsl(340 60% 62%) 0%,
-      hsl(300 45% 55%) 100%
+      hsl(175 60% 50%) 0%,
+      hsl(190 60% 45%) 100%
     );
   }
 
@@ -157,12 +157,12 @@
                 0 8px 32px hsl(var(--primary) / 0.1);
   }
 
-  /* Texto con degradado rose/plum */
+  /* Texto con degradado turquesa */
   .text-gradient {
     background: linear-gradient(
       90deg,
-      hsl(340 70% 72%),
-      hsl(300 50% 68%)
+      hsl(175 70% 60%),
+      hsl(190 60% 55%)
     );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
