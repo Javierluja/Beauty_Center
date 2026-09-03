@@ -399,46 +399,57 @@ export default function Sesiones() {
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Fecha *</label>
+                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Fecha (Opcional)</label>
                 <Input type="date" value={nextDate} onChange={e => setNextDate(e.target.value)} className="rounded-xl border-border h-12 font-medium" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Hora *</label>
+                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Hora (Opcional)</label>
                 <Input type="time" value={nextTime} onChange={e => setNextTime(e.target.value)} className="rounded-xl border-border h-12 font-medium" />
               </div>
             </div>
             <div className="space-y-2 pt-2 border-t border-border">
-              <Button
-                onClick={() => {
-                  if (!schedulingPack) return;
-                  if (!nextDate || !nextTime) {
-                    toast({ title: "Atención", description: "La fecha y hora son obligatorias.", variant: "destructive" });
-                    return;
-                  }
-                  useSession.mutate({ packId: schedulingPack.id });
-                  createAppointment.mutate({
-                    clientId: schedulingPack.clientId,
-                    serviceId: schedulingPack.serviceId,
-                    packId: schedulingPack.id,
-                    appointmentDate: nextDate,
-                    appointmentTime: nextTime,
-                    status: "pending",
-                    notes: `Sesión programada desde pack: ${schedulingPack.customTitle}`
-                  });
-                  const pendingAppt = allAppointments?.find(a => a.packId === schedulingPack.id && a.status === "pending");
-                  if (pendingAppt) updateAppointment.mutate({ id: pendingAppt.id, status: "completed" });
-                  const client = clients?.find(c => c.id === schedulingPack.clientId);
-                  createNotification.mutate({
-                    clientId: schedulingPack.clientId,
-                    type: "appointment_reminder",
-                    message: `Hola ${client?.name || ""}! Te recordamos tu próxima cita de ${schedulingPack.customTitle} el día ${nextDate} a las ${nextTime}. ¡Te esperamos!`
-                  });
-                }}
-                disabled={useSession.isPending || createAppointment.isPending || !nextDate || !nextTime}
-                className="w-full bg-primary hover:bg-primary/90 font-bold h-12 rounded-xl shadow-lg uppercase"
-              >
-                {useSession.isPending || createAppointment.isPending ? "Procesando..." : "Registrar y Agendar"}
-              </Button>
+              {nextDate && nextTime ? (
+                <Button
+                  onClick={() => {
+                    if (!schedulingPack) return;
+                    useSession.mutate({ packId: schedulingPack.id });
+                    createAppointment.mutate({
+                      clientId: schedulingPack.clientId,
+                      serviceId: schedulingPack.serviceId,
+                      packId: schedulingPack.id,
+                      appointmentDate: nextDate,
+                      appointmentTime: nextTime,
+                      status: "pending",
+                      notes: `Sesión programada desde pack: ${schedulingPack.customTitle}`
+                    });
+                    const pendingAppt = allAppointments?.find(a => a.packId === schedulingPack.id && a.status === "pending");
+                    if (pendingAppt) updateAppointment.mutate({ id: pendingAppt.id, status: "completed" });
+                    const client = clients?.find(c => c.id === schedulingPack.clientId);
+                    createNotification.mutate({
+                      clientId: schedulingPack.clientId,
+                      type: "appointment_reminder",
+                      message: `Hola ${client?.name || ""}! Te recordamos tu próxima cita de ${schedulingPack.customTitle} el día ${nextDate} a las ${nextTime}. ¡Te esperamos!`
+                    });
+                  }}
+                  disabled={useSession.isPending || createAppointment.isPending}
+                  className="w-full bg-primary hover:bg-primary/90 font-bold h-12 rounded-xl shadow-lg uppercase"
+                >
+                  {useSession.isPending || createAppointment.isPending ? "Procesando..." : "Registrar y Agendar Próxima"}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    if (!schedulingPack) return;
+                    useSession.mutate({ packId: schedulingPack.id });
+                    const pendingAppt = allAppointments?.find(a => a.packId === schedulingPack.id && a.status === "pending");
+                    if (pendingAppt) updateAppointment.mutate({ id: pendingAppt.id, status: "completed" });
+                  }}
+                  disabled={useSession.isPending}
+                  className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 font-bold h-12 rounded-xl uppercase"
+                >
+                  {useSession.isPending ? "Procesando..." : "Solo Rebajar Sesión"}
+                </Button>
+              )}
               <Button variant="ghost" onClick={() => setSchedulingPack(null)} className="w-full h-10 font-medium text-muted-foreground hover:text-foreground">Cancelar</Button>
             </div>
           </div>
