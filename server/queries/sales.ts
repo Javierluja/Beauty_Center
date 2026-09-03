@@ -1,6 +1,6 @@
 import { getDb } from "./connection.js";
 import { sales, saleItems, customers, users } from "../../db/schema.js";
-import { eq, desc, and, gte, sql } from "drizzle-orm";
+import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 
 export async function findAllSales(filters?: {
   clientId?: number;
@@ -21,7 +21,7 @@ export async function findAllSales(filters?: {
     conditions.push(gte(sales.createdAt, filters.dateFrom));
   }
   if (filters?.dateTo) {
-    conditions.push(gte(sales.createdAt, filters.dateTo));
+    conditions.push(lte(sales.createdAt, filters.dateTo));
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -72,7 +72,13 @@ export async function findSaleById(id: number) {
 
 export async function updateSaleStatus(id: number, status: string) {
   const db = getDb();
-  await db.update(sales).set({ status }).where(eq(sales.id, id));
+  const sale = await findSaleById(id);
+  if (!sale) return null;
+  const updates: any = { status };
+  if (status === "paid") {
+    updates.amountPaid = sale.finalTotal;
+  }
+  await db.update(sales).set(updates).where(eq(sales.id, id));
   return findSaleById(id);
 }
 
@@ -136,7 +142,7 @@ export async function getSalesSummary(dateFrom?: Date, dateTo?: Date) {
   const db = getDb();
   const conditions = [];
   if (dateFrom) conditions.push(gte(sales.createdAt, dateFrom));
-  if (dateTo) conditions.push(gte(sales.createdAt, dateTo));
+  if (dateTo) conditions.push(lte(sales.createdAt, dateTo));
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 

@@ -87,6 +87,9 @@ export default function Ventas() {
   const createSale = trpc.sale.create.useMutation({
     onSuccess: () => {
       utils.sale.list.invalidate();
+      utils.product.list.invalidate();
+      utils.customers.list.invalidate();
+      utils.sale.dailySummary.invalidate();
       setCart([]);
       setDiscount("0");
       toast({ title: "¡Venta realizada! ✨" });
@@ -102,8 +105,25 @@ export default function Ventas() {
   const iva = finalTotal - neto;
 
   function addToCart(item: any, type: 'servicio' | 'producto') {
+    if (type === 'producto' && Number(item.stock) <= 0) {
+      toast({
+        title: "Sin Stock",
+        description: `El producto "${item.name}" no tiene unidades disponibles en inventario.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     const existing = cart.find(i => i.id === item.id && i.type === type);
     if (existing) {
+      if (type === 'producto' && existing.quantity >= Number(item.stock)) {
+        toast({
+          title: "Stock máximo alcanzado",
+          description: `Solo hay ${item.stock} unidades de "${item.name}".`,
+          variant: "destructive"
+        });
+        return;
+      }
       setCart(cart.map(i => (i.id === item.id && i.type === type) ? { ...i, quantity: i.quantity + 1 } : i));
     } else {
       setCart([...cart, { ...item, type, quantity: 1 }]);
@@ -111,6 +131,19 @@ export default function Ventas() {
   }
 
   function updateQuantity(id: number, type: string, delta: number) {
+    const existing = cart.find(i => i.id === id && i.type === type);
+    if (existing && type === 'producto' && delta > 0) {
+      const prod = products?.find(p => p.id === id);
+      if (prod && existing.quantity >= Number(prod.stock)) {
+        toast({
+          title: "Stock máximo",
+          description: `No hay más unidades disponibles de este producto.`,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     setCart(cart.map(i => {
       if (i.id === id && i.type === type) {
         const newQty = Math.max(1, i.quantity + delta);

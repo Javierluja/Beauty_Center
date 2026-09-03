@@ -94,7 +94,7 @@ export async function updateProductStock(id: number, quantity: number) {
   const product = await findProductById(id);
   if (!product) return null;
   
-  const newStock = product.stock + quantity;
+  const newStock = Math.max(0, product.stock + quantity);
   await db
     .update(products)
     .set({ stock: newStock })

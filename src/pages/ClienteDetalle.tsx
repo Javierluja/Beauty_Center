@@ -46,6 +46,8 @@ export default function ClienteDetalle() {
   const { data: client, isLoading: clientLoading } = trpc.customers.byId.useQuery(clientIdNum);
   const { data: packs, isLoading: packsLoading } = trpc.session.listByClient.useQuery(clientIdNum);
   const { data: services } = trpc.service.list.useQuery({ active: true });
+  const { data: appointments } = trpc.appointment.list.useQuery({ clientId: clientIdNum });
+  const { data: clientSales } = trpc.sale.list.useQuery({ clientId: clientIdNum });
 
   const createPack = trpc.session.createPack.useMutation({
     onSuccess: () => {
@@ -213,21 +215,56 @@ export default function ClienteDetalle() {
       </div>
 
       <Tabs defaultValue="history">
-        <TabsList>
-          <TabsTrigger value="history">Historial de Citas</TabsTrigger>
-          <TabsTrigger value="purchases">Compras</TabsTrigger>
+        <TabsList className="bg-muted p-1 rounded-xl">
+          <TabsTrigger value="history" className="rounded-lg font-bold text-xs uppercase">Historial de Citas</TabsTrigger>
+          <TabsTrigger value="purchases" className="rounded-lg font-bold text-xs uppercase">Historial de Compras</TabsTrigger>
         </TabsList>
         <TabsContent value="history">
           <Card className="bg-admin-panel border-2 border-primary/10 rounded-3xl shadow-xl">
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground text-center py-8">No se encontraron citas pasadas.</p>
+            <CardContent className="pt-6 space-y-3">
+              {appointments && appointments.length > 0 ? (
+                appointments.map((a: any) => (
+                  <div key={a.id} className="p-4 bg-card rounded-xl border border-border flex justify-between items-center">
+                    <div>
+                      <p className="font-bold text-primary uppercase text-sm">{a.serviceName || "Servicio"}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(a.appointmentDate).toLocaleDateString()} · {a.appointmentTime} · {a.staffName || "General"}
+                      </p>
+                    </div>
+                    <Badge className="bg-primary text-white border-none text-[9px] font-black px-2 py-0.5">
+                      {a.status?.toUpperCase()}
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center py-8">No se encontraron citas registradas.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
         <TabsContent value="purchases">
           <Card className="bg-admin-panel border-2 border-primary/10 rounded-3xl shadow-xl">
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground text-center py-8">No se encontraron ventas registradas.</p>
+            <CardContent className="pt-6 space-y-3">
+              {clientSales && clientSales.length > 0 ? (
+                clientSales.map((s: any) => (
+                  <div key={s.id} className="p-4 bg-card rounded-xl border border-border flex justify-between items-center">
+                    <div>
+                      <p className="font-bold text-foreground text-sm uppercase">Venta #{s.id}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(s.createdAt).toLocaleDateString()} · {s.paymentMethod?.toUpperCase()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-black text-primary text-sm">${Math.floor(Number(s.finalTotal)).toLocaleString()}</p>
+                      <Badge variant={s.status === 'paid' ? 'outline' : 'destructive'} className="text-[8px] font-bold">
+                        {s.status === 'paid' ? 'PAGADO' : 'PENDIENTE'}
+                      </Badge>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center py-8">No se encontraron ventas registradas.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

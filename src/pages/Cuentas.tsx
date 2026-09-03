@@ -48,6 +48,9 @@ export default function Cuentas() {
   const markAsPaid = trpc.sale.updateStatus.useMutation({
     onSuccess: () => {
       utils.sale.list.invalidate();
+      utils.sale.summary.invalidate();
+      utils.sale.dailySummary.invalidate();
+      utils.customers.list.invalidate();
       toast({ title: "¡Pago completado! 💵", description: "La cuenta ha sido saldada con éxito." });
     }
   });
@@ -55,6 +58,9 @@ export default function Cuentas() {
   const registerAbono = trpc.sale.updateAbono.useMutation({
     onSuccess: (data) => {
       utils.sale.list.invalidate();
+      utils.sale.summary.invalidate();
+      utils.sale.dailySummary.invalidate();
+      utils.customers.list.invalidate();
       if (data?.status === 'paid') {
         toast({ title: "¡Deuda saldada! 💵", description: "El abono cubrió el total de la deuda." });
       } else {
@@ -63,9 +69,14 @@ export default function Cuentas() {
     }
   });
 
-  const filteredSales = unpaidSales?.filter(sale => 
-    sale.clientName?.toLowerCase().includes(search.toLowerCase())
-  );
+  const normalizedSearch = search.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  const filteredSales = unpaidSales?.filter(sale => {
+    if (!normalizedSearch) return true;
+    const name = (sale.clientName || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const saleId = String(sale.id);
+    return name.includes(normalizedSearch) || saleId.includes(normalizedSearch);
+  });
 
   const totalDebt = filteredSales?.reduce((acc, sale) => {
     const debt = Number(sale.finalTotal) - Number(sale.amountPaid || 0);
@@ -194,7 +205,13 @@ export default function Cuentas() {
           
           <div className="grid gap-4">
             {loadingClients ? [1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-3xl" />) : 
-              clients?.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).map(client => (
+              clients?.filter(c => {
+                if (!normalizedSearch) return true;
+                const name = (c.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const phone = (c.phone || "").toLowerCase();
+                const rut = (c.rut || "").toLowerCase();
+                return name.includes(normalizedSearch) || phone.includes(normalizedSearch) || rut.includes(normalizedSearch);
+              }).map(client => (
                 <Card key={client.id} className="border border-primary/10 rounded-2xl shadow-md hover:border-primary transition-all bg-admin-panel group overflow-hidden">
                   <CardContent className="p-0">
                     <div className="flex flex-col md:flex-row md:items-center">
