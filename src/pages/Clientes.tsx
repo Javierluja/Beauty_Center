@@ -38,7 +38,7 @@ export default function Clientes() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "", birthDate: "", rut: "", address: "", profession: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "", birthDate: "", rut: "", address: "", profession: "", firstService: "" });
 
   const { data: clients, isLoading } = trpc.customers.list.useQuery(
     search ? search : undefined
@@ -105,7 +105,8 @@ export default function Clientes() {
           birthDate: row.birthDate,
           rut: row.rut,
           address: row.address,
-          profession: row.profession
+          profession: row.profession,
+          firstService: row.firstService
         }));
         if(confirm(`¿Estás seguro de importar ${data.length} clientes?`)) {
           bulkCreateMutation.mutate(data);
@@ -116,7 +117,7 @@ export default function Clientes() {
   }
 
   function resetForm() {
-    setForm({ name: "", phone: "", email: "", notes: "", birthDate: "", rut: "", address: "", profession: "" });
+    setForm({ name: "", phone: "", email: "", notes: "", birthDate: "", rut: "", address: "", profession: "", firstService: "" });
     setEditingId(null);
   }
 
@@ -139,6 +140,7 @@ export default function Clientes() {
       rut: client.rut || "",
       address: client.address || "",
       profession: client.profession || "",
+      firstService: client.firstService || "",
     });
     setDialogOpen(true);
   }
@@ -205,6 +207,10 @@ export default function Clientes() {
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase">Notas / Alergias</Label>
                 <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Ej. Alérgica al tinte..." className="rounded-xl" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase">Primer Servicio</Label>
+                <Input value={form.firstService} onChange={(e) => setForm({ ...form, firstService: e.target.value })} placeholder="Ej. Depilación Láser" className="rounded-xl" />
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase">Fecha de Nacimiento</Label>
@@ -341,12 +347,12 @@ export default function Clientes() {
                 return (
                   <>
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-pink-500">1er Servicio</p>
-                      <p className="text-sm font-semibold text-pink-600">{firstAppt ? firstAppt.serviceName : '-'}</p>
+                      <p className="text-[10px] uppercase font-bold text-primary">1er Servicio</p>
+                      <p className="text-sm font-semibold text-primary">{selectedClient?.firstService || (firstAppt ? firstAppt.serviceName : '-')}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-pink-500">Fecha 1er Servicio</p>
-                      <p className="text-sm font-semibold text-pink-600">{firstAppt ? new Date(firstAppt.appointmentDate).toLocaleDateString() : '-'}</p>
+                      <p className="text-[10px] uppercase font-bold text-primary">Fecha 1er Servicio</p>
+                      <p className="text-sm font-semibold text-primary">{firstAppt ? new Date(firstAppt.appointmentDate).toLocaleDateString() : '-'}</p>
                     </div>
                   </>
                 );

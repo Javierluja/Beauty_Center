@@ -35,6 +35,7 @@ export async function createClient(data: {
   rut?: string;
   address?: string;
   profession?: string;
+  firstService?: string;
 }) {
   try {
     const db = getDb();
@@ -60,6 +61,7 @@ export async function updateClient(
     rut?: string;
     address?: string;
     profession?: string;
+    firstService?: string;
   }
 ) {
   const db = getDb();
@@ -71,9 +73,6 @@ export async function deleteClient(id: number) {
   const db = getDb();
   await db.delete(customers).where(eq(customers.id, id));
 }
-
-
-
 
 export async function bulkCreateClients(clientsData: any[]) {
   if (!clientsData.length) return 0;
@@ -88,6 +87,7 @@ export async function bulkCreateClients(clientsData: any[]) {
     rut: c.rut || null,
     address: c.address || null,
     profession: c.profession || null,
+    firstService: c.firstService || null,
   }));
   
   const result = await db.insert(customers).values(mappedData);
