@@ -96,18 +96,31 @@ export default function Clientes() {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: (header) => header.trim().toLowerCase(),
       complete: (results) => {
-        const data = results.data.map((row: any) => ({
-          name: row.name,
-          phone: row.phone,
-          email: row.email,
-          notes: row.notes,
-          birthDate: row.birthDate,
-          rut: row.rut,
-          address: row.address,
-          profession: row.profession,
-          firstService: row.firstService
-        }));
+        const data = results.data.map((row: any) => {
+          let bDate = row.birthdate || row.birthDate || row['fecha de nacimiento'] || null;
+          if (bDate) {
+            if (bDate.includes('/')) {
+              const parts = bDate.split('/');
+              if (parts.length === 3) {
+                // assume DD/MM/YYYY
+                bDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+              }
+            }
+          }
+          return {
+            name: row.name || row.nombre,
+            phone: row.phone || row.telefono,
+            email: row.email || row.correo,
+            notes: row.notes || row.notas,
+            birthDate: bDate,
+            rut: row.rut,
+            address: row.address || row.direccion,
+            profession: row.profession || row.profesion,
+            firstService: row.firstservice || row.firstService || row['primer servicio']
+          };
+        });
         if(confirm(`¿Estás seguro de importar ${data.length} clientes?`)) {
           bulkCreateMutation.mutate(data);
         }
