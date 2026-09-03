@@ -9,6 +9,7 @@ import { expenseRouter } from "./expense-router.js";
 import { sessionRouter } from "./session-router.js";
 import { userRouter } from "./user-router.js";
 import { purchaseRouter } from "./purchase-router.js";
+import { backupRouter } from "./backup-router.js";
 import { createRouter, publicQuery } from "./middleware.js";
 
 export const appRouter = createRouter({
@@ -24,6 +25,7 @@ export const appRouter = createRouter({
   session: sessionRouter,
   user: userRouter,
   purchase: purchaseRouter,
+  backup: backupRouter,
 });
 
 export type AppRouter = typeof appRouter;

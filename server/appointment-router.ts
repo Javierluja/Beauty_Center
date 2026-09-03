@@ -10,6 +10,8 @@ import {
   findUpcomingAppointments,
 } from "./queries/appointments.js";
 
+import { syncToGoogleSheets } from "./lib/backup-sheets.js";
+
 export const appointmentRouter = createRouter({
   list: authedQuery
     .input(
@@ -45,7 +47,30 @@ export const appointmentRouter = createRouter({
         notes: z.string().optional(),
       })
     )
-    .mutation(({ input }) => createAppointment(input)),
+    .mutation(async ({ input }) => {
+      const appt = await createAppointment(input);
+      if (appt) {
+        try {
+          const { findClientById } = await import("./queries/clients.js");
+          const { findServiceById } = await import("./queries/services.js");
+          const client = await findClientById(appt.clientId);
+          const service = await findServiceById(appt.serviceId);
+          syncToGoogleSheets({
+            tipo: "cita_creada",
+            id: appt.id,
+            cliente: client?.name || "Desconocido",
+            telefono: client?.phone || "",
+            servicio: service?.name || "Servicio",
+            fechaCita: appt.appointmentDate,
+            horaCita: appt.appointmentTime,
+            profesional: appt.staffName || "General",
+            estado: appt.status,
+            packId: appt.packId || null,
+          });
+        } catch (e) {}
+      }
+      return appt;
+    }),
 
   update: authedQuery
     .input(
@@ -61,9 +86,27 @@ export const appointmentRouter = createRouter({
         notes: z.string().optional(),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       const { id, ...data } = input;
-      return updateAppointment(id, data);
+      const appt = await updateAppointment(id, data);
+      if (appt) {
+        try {
+          const { findClientById } = await import("./queries/clients.js");
+          const { findServiceById } = await import("./queries/services.js");
+          const client = await findClientById(appt.clientId);
+          const service = await findServiceById(appt.serviceId);
+          syncToGoogleSheets({
+            tipo: "cita_actualizada",
+            id: appt.id,
+            cliente: client?.name || "Desconocido",
+            servicio: service?.name || "Servicio",
+            fechaCita: appt.appointmentDate,
+            horaCita: appt.appointmentTime,
+            estado: appt.status,
+          });
+        } catch (e) {}
+      }
+      return appt;
     }),
 
   delete: authedQuery

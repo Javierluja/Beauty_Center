@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, User, Bell, Shield, Palette, Sparkles } from "lucide-react";
+import { Settings, User, Bell, Shield, Palette, Sparkles, CloudDownload, FileSpreadsheet, Database } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { trpc } from "@/providers/trpc";
@@ -86,6 +86,13 @@ export default function Ajustes() {
             className={`w-full justify-start gap-3 h-12 rounded-xl font-semibold text-sm border transition-all ${activeTab === "seguridad" ? "bg-primary text-primary-foreground border-primary shadow-md" : "bg-card border-border text-foreground hover:border-primary/40 hover:bg-accent"}`}
           >
             <Shield className="h-5 w-5" /> Seguridad
+          </Button>
+          <Button 
+            variant="ghost" 
+            onClick={() => setActiveTab("backup")}
+            className={`w-full justify-start gap-3 h-12 rounded-xl font-semibold text-sm border transition-all ${activeTab === "backup" ? "bg-primary text-primary-foreground border-primary shadow-md" : "bg-card border-border text-foreground hover:border-primary/40 hover:bg-accent"}`}
+          >
+            <CloudDownload className="h-5 w-5" /> Copias de Seguridad
           </Button>
         </div>
 
@@ -233,6 +240,66 @@ export default function Ajustes() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {activeTab === "backup" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <Card className="border border-border shadow-xl rounded-2xl overflow-hidden bg-card">
+                <CardHeader className="border-b border-border px-6 py-5">
+                  <CardTitle className="font-bold text-foreground flex items-center gap-2">
+                    <FileSpreadsheet className="h-5 w-5 text-emerald-500" /> Sincronización con Google Sheets
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    El sistema envía copias de seguridad continuas de cada nuevo cliente, cita agendada, sesión canjeada, venta y gasto directamente a tu planilla de Google Sheets.
+                  </p>
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3">
+                    <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
+                    <div>
+                      <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase">Sincronización Automática Activa</p>
+                      <p className="text-[11px] text-muted-foreground">Todos los cambios en clientes, citas, ventas y sesiones se respaldan en tiempo real.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-border shadow-xl rounded-2xl overflow-hidden bg-card">
+                <CardHeader className="border-b border-border px-6 py-5">
+                  <CardTitle className="font-bold text-foreground flex items-center gap-2">
+                    <Database className="h-5 w-5 text-primary" /> Descargar Copia Local de Seguridad
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Genera y descarga un archivo completo con todos los registros actuales de tu negocio (clientes, servicios, citas, ventas, sesiones y gastos) en tu computadora.
+                  </p>
+                  <Button 
+                    onClick={async () => {
+                      try {
+                        toast({ title: "Generando respaldo...", description: "Extrayendo información de la base de datos." });
+                        const res = await fetch("/api/trpc/backup.exportAll");
+                        const json = await res.json();
+                        const data = json?.result?.data?.json || json?.result?.data || json;
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `BeautyCenter_Backup_${new Date().toISOString().split("T")[0]}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        toast({ title: "¡Copia descargada! 💾", description: "Tu respaldo se guardó en tu carpeta de Descargas." });
+                      } catch (err: any) {
+                        toast({ title: "Error al descargar", description: err.message, variant: "destructive" });
+                      }
+                    }}
+                    className="bg-primary hover:bg-primary/90 font-bold h-12 px-6 rounded-xl shadow-lg uppercase flex items-center gap-2"
+                  >
+                    <CloudDownload className="h-5 w-5" /> Descargar Respaldo Completo (.JSON)
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
       </div>

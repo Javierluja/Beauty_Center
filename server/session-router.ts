@@ -3,6 +3,7 @@ import { createRouter, authedQuery } from "./middleware.js";
 import { sessionPacks, sessionUsage } from "../db/schema.js";
 import { eq, and, sql } from "drizzle-orm";
 import { getDb } from "./queries/connection.js";
+import { syncToGoogleSheets } from "./lib/backup-sheets.js";
 
 export const sessionRouter = createRouter({
   listAll: authedQuery.query(async () => {
@@ -31,7 +32,7 @@ export const sessionRouter = createRouter({
     )
     .mutation(async ({ input }) => {
       const db = getDb();
-      return await db.insert(sessionPacks).values({
+      const res = await db.insert(sessionPacks).values({
         clientId: input.clientId,
         serviceId: input.serviceId,
         customTitle: input.customTitle,
@@ -39,6 +40,24 @@ export const sessionRouter = createRouter({
         remainingSessions: input.totalSessions,
         purchaseDate: new Date().toISOString().split('T')[0],
       });
+
+      try {
+        const { findClientById } = await import("./queries/clients.js");
+        const { findServiceById } = await import("./queries/services.js");
+        const client = await findClientById(input.clientId);
+        const service = await findServiceById(input.serviceId);
+        syncToGoogleSheets({
+          tipo: "sesion_pack_creado",
+          cliente: client?.name || "Desconocido",
+          telefono: client?.phone || "",
+          servicio: input.customTitle || service?.name || "Pack de Sesiones",
+          totalSesiones: input.totalSessions,
+          sesionesRestantes: input.totalSessions,
+          fecha: new Date().toLocaleDateString("es-CL"),
+        });
+      } catch (e) {}
+
+      return res;
     }),
 
   useSession: authedQuery
@@ -77,6 +96,24 @@ export const sessionRouter = createRouter({
           status: newRemaining === 0 ? "finished" : "active"
         })
         .where(eq(sessionPacks.id, input.packId));
+
+      try {
+        const { findClientById } = await import("./queries/clients.js");
+        const { findServiceById } = await import("./queries/services.js");
+        const client = await findClientById(pack.clientId);
+        const service = await findServiceById(pack.serviceId);
+        syncToGoogleSheets({
+          tipo: "sesion_utilizada",
+          packId: input.packId,
+          cliente: client?.name || "Desconocido",
+          servicio: pack.customTitle || service?.name || "Sesión",
+          sesionNumero,
+          totalSesiones: pack.totalSessions,
+          sesionesRestantes: newRemaining,
+          notas: input.notes || "",
+          fecha: new Date().toLocaleDateString("es-CL"),
+        });
+      } catch (e) {}
 
       return { success: true, remaining: newRemaining };
     }),
