@@ -1,6 +1,6 @@
 import { getDb } from "./connection.js";
 import { products } from "../../db/schema.js";
-import { eq, like, desc, lte, and } from "drizzle-orm";
+import { eq, desc, lte, and, sql, or } from "drizzle-orm";
 
 export async function findAllProducts(search?: string, active?: boolean, lowStock?: boolean) {
   const db = getDb();
@@ -9,8 +9,15 @@ export async function findAllProducts(search?: string, active?: boolean, lowStoc
   if (lowStock) {
     conditions.push(lte(products.stock, products.minStock));
   }
-  if (search) {
-    conditions.push(like(products.name, `%${search}%`));
+  if (search && search.trim()) {
+    const term = `%${search.trim()}%`;
+    conditions.push(
+      or(
+        sql`${products.name} COLLATE utf8mb4_general_ci LIKE ${term}`,
+        sql`COALESCE(${products.sku}, '') COLLATE utf8mb4_general_ci LIKE ${term}`,
+        sql`COALESCE(${products.category}, '') COLLATE utf8mb4_general_ci LIKE ${term}`
+      )
+    );
   }
   if (active !== undefined) {
     conditions.push(eq(products.isActive, active ? 1 : 0));

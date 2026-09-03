@@ -190,7 +190,10 @@ export default function Sesiones() {
   const activePacks = allPacks?.filter(p => {
     const hasRemaining = p.remainingSessions > 0;
     const hasPendingAppointment = allAppointments?.some(a => a.packId === p.id && a.status === "pending");
-    const matchesSearch = !searchTermPacks || clients?.find(c => c.id === p.clientId)?.name.toLowerCase().includes(searchTermPacks.toLowerCase());
+    const term = searchTermPacks.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const clientName = (clients?.find(c => c.id === p.clientId)?.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const packTitle = (p.customTitle || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const matchesSearch = !term || clientName.includes(term) || packTitle.includes(term);
     return (hasRemaining || hasPendingAppointment) && matchesSearch;
   }) || [];
 

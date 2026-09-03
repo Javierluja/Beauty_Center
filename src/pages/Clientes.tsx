@@ -44,6 +44,19 @@ export default function Clientes() {
     search ? search : undefined
   );
 
+  const displayClients = useMemo(() => {
+    if (!clients) return [];
+    if (!search.trim()) return clients;
+    const term = search.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return clients.filter((c: any) => {
+      const name = (c.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const phone = (c.phone || "").toLowerCase();
+      const rut = (c.rut || "").toLowerCase();
+      const email = (c.email || "").toLowerCase();
+      return name.includes(term) || phone.includes(term) || rut.includes(term) || email.includes(term);
+    });
+  }, [clients, search]);
+
   // Queries para el historial
   const { data: history } = trpc.appointment.list.useQuery(
     { clientId: selectedClient?.id },
@@ -257,10 +270,10 @@ export default function Clientes() {
                 [1, 2, 3].map(i => (
                   <tr key={i} className="border-b border-primary/5"><td colSpan={3} className="p-4"><Skeleton className="h-12 w-full rounded-xl" /></td></tr>
                 ))
-              ) : (clients || []).length === 0 ? (
-                <tr><td colSpan={3} className="p-10 text-center text-muted-foreground font-black uppercase">No hay clientes registrados</td></tr>
+              ) : displayClients.length === 0 ? (
+                <tr><td colSpan={3} className="p-10 text-center text-muted-foreground font-black uppercase">No se encontraron clientes</td></tr>
               ) : (
-                (clients || []).map(client => (
+                displayClients.map(client => (
                   <tr key={client.id} className="border-b border-primary/5 hover:bg-primary/5 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">

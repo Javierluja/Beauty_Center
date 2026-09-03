@@ -1,13 +1,19 @@
 import { getDb } from "./connection.js";
 import { services } from "../../db/schema.js";
-import { eq, like, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, or } from "drizzle-orm";
 
 export async function findAllServices(search?: string, active?: boolean) {
   const db = getDb();
   const conditions = [];
 
-  if (search) {
-    conditions.push(like(services.name, `%${search}%`));
+  if (search && search.trim()) {
+    const term = `%${search.trim()}%`;
+    conditions.push(
+      or(
+        sql`${services.name} COLLATE utf8mb4_general_ci LIKE ${term}`,
+        sql`COALESCE(${services.category}, '') COLLATE utf8mb4_general_ci LIKE ${term}`
+      )
+    );
   }
   if (active !== undefined) {
     conditions.push(eq(services.isActive, active ? 1 : 0));

@@ -1,14 +1,22 @@
 import { getDb } from "./connection.js";
 import { customers } from "../../db/schema.js";
-import { eq, like, desc } from "drizzle-orm";
+import { eq, desc, sql, or } from "drizzle-orm";
 
 export async function findAllClients(search?: string) {
   const db = getDb();
-  if (search) {
+  if (search && search.trim()) {
+    const term = `%${search.trim()}%`;
     return db
       .select()
       .from(customers)
-      .where(like(customers.name, `%${search}%`))
+      .where(
+        or(
+          sql`${customers.name} COLLATE utf8mb4_general_ci LIKE ${term}`,
+          sql`COALESCE(${customers.phone}, '') COLLATE utf8mb4_general_ci LIKE ${term}`,
+          sql`COALESCE(${customers.rut}, '') COLLATE utf8mb4_general_ci LIKE ${term}`,
+          sql`COALESCE(${customers.email}, '') COLLATE utf8mb4_general_ci LIKE ${term}`
+        )
+      )
       .orderBy(desc(customers.createdAt));
   }
   return db.select().from(customers).orderBy(desc(customers.createdAt));
