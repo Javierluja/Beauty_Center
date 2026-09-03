@@ -8,6 +8,9 @@ import { signSessionToken } from "./auth-logic.js";
 import { findUserByEmail, createUser } from "./queries/users.js";
 import { createAccessLog } from "./queries/access-logs.js";
 import { TRPCError } from "@trpc/server";
+import { getDb } from "./queries/connection.js";
+import { users } from "../db/schema.js";
+import { eq } from "drizzle-orm";
 
 export const authRouter = createRouter({
   me: authedQuery.query((opts) => opts.ctx.user),
@@ -40,9 +43,6 @@ export const authRouter = createRouter({
         // Transparently upgrade password to bcrypt hash
         if (isValid) {
           const newHash = await bcrypt.hash(input.password, 10);
-          const { getDb } = await import("./queries/connection.js");
-          const { users } = await import("../db/schema.js");
-          const { eq } = await import("drizzle-orm");
           await getDb().update(users).set({ password: newHash }).where(eq(users.id, user.id));
         }
       }
@@ -91,8 +91,6 @@ export const authRouter = createRouter({
     }))
     .mutation(async ({ input, ctx }) => {
       // Consultamos si ya hay usuarios para decidir el rol inicial de forma segura
-      const { getDb } = await import("./queries/connection.js");
-      const { users } = await import("../db/schema.js");
       const db = getDb();
       const existingUsers = await db.select().from(users).limit(1);
       
