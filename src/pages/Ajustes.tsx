@@ -287,9 +287,24 @@ export default function Ajustes() {
                     <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
                     <div>
                       <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase">Sincronización Automática Activa</p>
-                      <p className="text-[11px] text-muted-foreground">Todos los cambios en clientes, citas, ventas y sesiones se respaldan en tiempo real.</p>
+                      <p className="text-[11px] text-muted-foreground">Cada compra, sesión, producto, servicio, cita, cliente, venta y gasto se respalda en tiempo real.</p>
                     </div>
                   </div>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        toast({ title: "Sincronizando...", description: "Enviando todos los registros a tu Google Sheets." });
+                        const res = await fetch("/api/trpc/backup.syncAllToSheets", { method: "POST" });
+                        toast({ title: "¡Respaldo enviado a Sheets! 📊", description: "Todos tus clientes, servicios, productos, compras y sesiones están en tu planilla." });
+                      } catch(e: any) {
+                        toast({ title: "Error", description: e.message, variant: "destructive" });
+                      }
+                    }}
+                    variant="outline"
+                    className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 font-bold h-11 rounded-xl text-xs uppercase flex items-center gap-2"
+                  >
+                    <FileSpreadsheet className="h-4 w-4" /> Sincronizar Toda la Información a Sheets Ahora
+                  </Button>
                 </CardContent>
               </Card>
 

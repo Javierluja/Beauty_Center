@@ -41,9 +41,23 @@ export const productRouter = createRouter({
         isActive: z.boolean().default(true),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       console.log("[API] Creando producto:", input.name);
-      return createProduct(input as any);
+      const res = await createProduct(input as any);
+      try {
+        const { syncToGoogleSheets } = await import("./lib/backup-sheets.js");
+        syncToGoogleSheets({
+          tipo: "producto",
+          id: (res as any)?.id || "",
+          nombre: input.name,
+          sku: input.sku || "",
+          precio: String(input.price),
+          stock: input.stock,
+          minStock: input.minStock,
+          categoria: input.category || "General",
+        });
+      } catch (e) {}
+      return res;
     }),
 
   update: authedQuery
@@ -60,9 +74,24 @@ export const productRouter = createRouter({
         isActive: z.boolean().optional(),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       const { id, ...data } = input;
-      return updateProduct(id, data);
+      const res = await updateProduct(id, data);
+      try {
+        const prod = await findProductById(id);
+        const { syncToGoogleSheets } = await import("./lib/backup-sheets.js");
+        syncToGoogleSheets({
+          tipo: "producto",
+          id: id,
+          nombre: prod?.name || data.name || "",
+          sku: prod?.sku || data.sku || "",
+          precio: String(prod?.price || data.price || ""),
+          stock: prod?.stock ?? data.stock,
+          minStock: prod?.minStock ?? data.minStock,
+          categoria: prod?.category || data.category || "General",
+        });
+      } catch (e) {}
+      return res;
     }),
 
   delete: authedQuery

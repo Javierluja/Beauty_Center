@@ -107,6 +107,25 @@ export const purchaseRouter = createRouter({
               .where(eq(products.id, item.productId));
           }
         }
+
+        // Sync to Google Sheets
+        try {
+          const sup = await db.select().from(suppliers).where(eq(suppliers.id, purchaseData.supplierId)).limit(1).then((r: any) => r[0]);
+          const { syncToGoogleSheets } = await import("./lib/backup-sheets.js");
+          syncToGoogleSheets({
+            tipo: "compra",
+            id: purchaseId,
+            factura: purchaseData.invoiceNumber,
+            proveedor: sup?.name || "Proveedor",
+            rut: purchaseData.rut,
+            neto: String(purchaseData.netAmount),
+            iva: String(purchaseData.taxAmount),
+            total: String(purchaseData.totalAmount),
+            fechaCompra: purchaseData.purchaseDate,
+            itemsCount: items ? items.length : 0,
+            notas: purchaseData.notes || "",
+          });
+        } catch (e) {}
         
         return { id: purchaseId };
       } catch (err: any) {

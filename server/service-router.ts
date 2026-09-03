@@ -41,6 +41,17 @@ export const serviceRouter = createRouter({
       try {
         const result = await createService(input as any);
         console.log("[API] Servicio creado exitosamente:", result);
+        try {
+          const { syncToGoogleSheets } = await import("./lib/backup-sheets.js");
+          syncToGoogleSheets({
+            tipo: "servicio",
+            id: (result as any)?.id || "",
+            nombre: input.name,
+            precio: String(input.price),
+            duracion: input.duration,
+            categoria: input.category || "General",
+          });
+        } catch (e) {}
         return result;
       } catch (err) {
         console.error("[API ERROR] Fallo en la mutación:", err);
@@ -60,9 +71,22 @@ export const serviceRouter = createRouter({
         isActive: z.boolean().optional(),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       const { id, ...data } = input;
-      return updateService(id, data);
+      const res = await updateService(id, data);
+      try {
+        const s = await findServiceById(id);
+        const { syncToGoogleSheets } = await import("./lib/backup-sheets.js");
+        syncToGoogleSheets({
+          tipo: "servicio",
+          id: id,
+          nombre: s?.name || data.name || "",
+          precio: String(s?.price || data.price || ""),
+          duracion: s?.duration || data.duration || 30,
+          categoria: s?.category || data.category || "General",
+        });
+      } catch (e) {}
+      return res;
     }),
 
   delete: authedQuery
