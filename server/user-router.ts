@@ -97,6 +97,37 @@ export const userRouter = createRouter({
         .set({ password: hashedPassword, updatedAt: new Date() })
         .where(eq(users.id, ctx.user.id));
     }),
+
+  updateProfile: authedQuery
+    .input(
+      z.object({
+        name: z.string().min(1, "El nombre no puede estar vacío"),
+        email: z.string().email().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = getDb();
+      const updates: any = {
+        name: input.name,
+        updatedAt: new Date(),
+      };
+      if (input.email) {
+        updates.email = input.email;
+      }
+      await db
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, ctx.user.id));
+
+      const updated = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1)
+        .then((r: any) => r[0]);
+
+      return updated;
+    }),
 });
 
 

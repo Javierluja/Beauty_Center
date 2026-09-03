@@ -11,10 +11,38 @@ import { trpc } from "@/providers/trpc";
 export default function Ajustes() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const utils = trpc.useUtils();
   const [activeTab, setActiveTab] = useState("perfil");
   const [form, setForm] = useState({
     name: user?.name || "",
     email: user?.email || "",
+  });
+
+  useEffect(() => {
+    if (user) {
+      setForm({
+        name: user.name || "",
+        email: user.email || "",
+      });
+    }
+  }, [user]);
+
+  const updateProfile = trpc.user.updateProfile.useMutation({
+    onSuccess: () => {
+      utils.auth.me.invalidate();
+      utils.user.list.invalidate();
+      toast({ 
+        title: "¡Perfil actualizado! ✨", 
+        description: "Tu información ha sido guardada correctamente." 
+      });
+    },
+    onError: (err) => {
+      toast({ 
+        title: "Error al actualizar", 
+        description: err.message, 
+        variant: "destructive" 
+      });
+    },
   });
   
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" });
@@ -127,12 +155,13 @@ export default function Ajustes() {
 
                 <div className="pt-6 border-t border-primary/5">
                   <Button 
+                    disabled={updateProfile.isPending || !form.name.trim()}
                     onClick={() => {
-                      toast({ title: "Perfil actualizado ✨", description: "Tus cambios han sido guardados correctamente." });
+                      updateProfile.mutate({ name: form.name.trim() });
                     }}
                     className="bg-primary hover:bg-primary/90 font-black h-14 px-8 rounded-2xl shadow-xl shadow-primary/20 uppercase group"
                   >
-                    Guardar Cambios ✨
+                    {updateProfile.isPending ? "Guardando..." : "Guardar Cambios ✨"}
                   </Button>
                 </div>
               </CardContent>
