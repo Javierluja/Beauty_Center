@@ -35,6 +35,7 @@ import {
   Gift,
   ChevronRight,
   Hash,
+  Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -63,7 +64,12 @@ export default function Ventas() {
   const { data: saleItems, isLoading: loadingItems } = trpc.sale.getItems.useQuery(viewingSaleId || 0, { enabled: !!viewingSaleId });
 
   const groupedServices = useMemo(() => {
-    const filtered = (services || []).filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const term = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const filtered = (services || []).filter(s => {
+      const name = (s.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const cat = (s.category || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return name.includes(term) || cat.includes(term);
+    });
     const groups: Record<string, any[]> = {};
     filtered.forEach(s => {
       const cat = s.category || "GENERAL";
@@ -74,7 +80,13 @@ export default function Ventas() {
   }, [services, searchTerm]);
 
   const groupedProducts = useMemo(() => {
-    const filtered = (products || []).filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const term = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const filtered = (products || []).filter(p => {
+      const name = (p.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const cat = (p.category || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const sku = (p.sku || "").toLowerCase();
+      return name.includes(term) || cat.includes(term) || sku.includes(term);
+    });
     const groups: Record<string, any[]> = {};
     filtered.forEach(p => {
       const cat = p.category || "GENERAL";
@@ -198,9 +210,9 @@ export default function Ventas() {
         </TabsList>
 
         <TabsContent value="caja" className="m-0 flex-1">
-          <div className="grid lg:grid-cols-12 gap-6 h-[calc(100vh-130px)] min-h-[500px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:h-[calc(100vh-140px)] min-h-[600px]">
             {/* SELECCIÓN IZQUIERDA */}
-            <div className="lg:col-span-7 flex flex-col gap-3 overflow-hidden">
+            <div className="lg:col-span-7 flex flex-col gap-3 h-[520px] lg:h-full overflow-hidden">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
           <Input 
@@ -307,116 +319,137 @@ export default function Ventas() {
       </div>
 
       {/* CARRITO Y CIERRE DERECHA */}
-      <Card className="lg:col-span-5 border border-border shadow-xl rounded-2xl overflow-hidden flex flex-col bg-card">
-        <CardHeader className="border-b border-border p-4">
-          <CardTitle className="font-bold text-foreground flex items-center gap-2 text-sm">
-            <ShoppingCart className="h-4 w-4 text-primary" /> Orden de Venta
-          </CardTitle>
-        </CardHeader>
+      <div className="lg:col-span-5 border border-border shadow-xl rounded-2xl overflow-hidden flex flex-col bg-card h-[520px] lg:h-full min-h-[480px]">
+        {/* ENCABEZADO ORDEN */}
+        <div className="border-b border-border p-4 bg-muted/20 shrink-0 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShoppingCart className="h-4 w-4 text-primary" />
+            <span className="font-bold text-foreground text-sm uppercase">Orden de Venta</span>
+          </div>
+          {cart.length > 0 && (
+            <Badge variant="secondary" className="font-bold text-[10px] uppercase">
+              {cart.reduce((a, b) => a + b.quantity, 0)} {cart.reduce((a, b) => a + b.quantity, 0) === 1 ? 'ítem' : 'ítems'}
+            </Badge>
+          )}
+        </div>
         
-        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+        {/* LISTADO DE ITEMS CON SCROLL SEGURO Y MIN-HEIGHT */}
+        <div className="flex-1 min-h-[140px] overflow-y-auto p-4 space-y-2.5">
           {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-primary/40 py-20">
-              <ShoppingCart className="h-20 w-20 mb-4 opacity-50" />
-              <p className="font-black uppercase text-xs tracking-widest text-center opacity-80">Selecciona ítems para comenzar</p>
+            <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-muted-foreground/60 py-8">
+              <ShoppingCart className="h-14 w-14 mb-2.5 opacity-40 text-primary" />
+              <p className="font-bold uppercase text-xs tracking-wider text-center">Selecciona ítems para comenzar</p>
             </div>
           ) : (
-            <div className="space-y-6">
-              {/* SERVICIOS EN CARRITO */}
-              {cart.some(i => i.type === 'servicio') && (
-                <div className="space-y-2">
-                  <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-1">Servicios</p>
-                  {cart.filter(i => i.type === 'servicio').map(item => (
-                    <div key={`${item.type}-${item.id}`} className="flex items-center justify-between group bg-muted/50 p-3 rounded-xl border border-border">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-black text-primary text-xs uppercase truncate leading-none">{item.name}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">${Math.floor(Number(item.price)).toLocaleString()} c/u</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center bg-muted rounded-lg px-1">
-                          <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, item.type, -1)} className="h-7 w-7 text-primary hover:bg-accent rounded-md"><Minus className="h-3 w-3" /></Button>
-                          <span className="font-bold text-xs w-7 text-center text-foreground">{item.quantity}</span>
-                          <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, item.type, 1)} className="h-7 w-7 text-primary hover:bg-accent rounded-md"><Plus className="h-3 w-3" /></Button>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id, item.type)} className="text-destructive hover:bg-destructive/10 h-8 w-8 rounded-xl"><Minus className="h-4 w-4" /></Button>
-                      </div>
+            <div className="space-y-2.5">
+              {cart.map((item) => (
+                <div 
+                  key={`${item.type}-${item.id}`} 
+                  className="flex items-center justify-between bg-muted/40 hover:bg-muted/70 p-3 rounded-xl border border-border/80 transition-colors"
+                >
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Badge 
+                        variant="outline" 
+                        className={`text-[8px] font-black uppercase px-1.5 py-0 border-none ${
+                          item.type === 'servicio' 
+                            ? 'bg-primary/15 text-primary' 
+                            : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                        }`}
+                      >
+                        {item.type === 'servicio' ? 'Servicio' : 'Producto'}
+                      </Badge>
+                      <p className="font-bold text-foreground text-xs uppercase truncate leading-tight">
+                        {item.name}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <p className="text-[11px] font-semibold text-muted-foreground">
+                      ${Math.floor(Number(item.price)).toLocaleString()} c/u · <span className="text-primary font-bold">${Math.floor(Number(item.price) * item.quantity).toLocaleString()}</span>
+                    </p>
+                  </div>
 
-              {/* PRODUCTOS EN CARRITO */}
-              {cart.some(i => i.type === 'producto') && (
-                <div className="space-y-2">
-                  <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-1">Productos</p>
-                  {cart.filter(i => i.type === 'producto').map(item => (
-                    <div key={`${item.type}-${item.id}`} className="flex items-center justify-between group bg-muted/30 p-3 rounded-xl border border-border">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-primary text-xs uppercase truncate leading-none">{item.name}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">${Math.floor(Number(item.price)).toLocaleString()} c/u</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center bg-primary/5 rounded-xl px-1">
-                          <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, item.type, -1)} className="h-8 w-8 text-primary"><Minus className="h-3 w-3" /></Button>
-                          <span className="font-black text-xs w-6 text-center text-primary">{item.quantity}</span>
-                          <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, item.type, 1)} className="h-8 w-8 text-primary"><Plus className="h-3 w-3" /></Button>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id, item.type)} className="text-destructive hover:bg-destructive/10 h-8 w-8 rounded-xl"><Minus className="h-4 w-4" /></Button>
-                      </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center bg-background border border-border rounded-lg shadow-sm">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => updateQuantity(item.id, item.type, -1)} 
+                        className="h-7 w-7 text-primary hover:bg-muted rounded-l-lg"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="font-black text-xs w-6 text-center text-foreground">
+                        {item.quantity}
+                      </span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => updateQuantity(item.id, item.type, 1)} 
+                        className="h-7 w-7 text-primary hover:bg-muted rounded-r-lg"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
                     </div>
-                  ))}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => removeFromCart(item.id, item.type)} 
+                      className="text-destructive hover:bg-destructive/10 h-7 w-7 rounded-lg"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           )}
-        </CardContent>
+        </div>
 
-        {/* CIERRE DE VENTA */}
-        <div className="p-5 bg-muted/50 border-t border-border space-y-4">
-
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <Label className="text-[11px] font-black uppercase text-slate-800">Descuento ($)</Label>
+        {/* CIERRE DE VENTA COMPACTO Y SHRINK-0 */}
+        <div className="p-4 bg-muted/40 border-t border-border space-y-3 shrink-0">
+          <div className="flex items-center justify-between border-b border-border/80 pb-2.5">
+            <Label className="text-[11px] font-black uppercase text-foreground">Descuento ($)</Label>
             <Input 
               type="number" 
               min="0" 
               value={discount} 
-              onChange={(e) => setDiscount(e.target.value)}
-              className="w-32 h-9 text-right font-black rounded-lg border-primary/20 text-sm"
+              onChange={(e) => setDiscount(e.target.value)} 
+              className="w-32 h-8 text-right font-black rounded-lg border-primary/20 text-sm bg-background"
             />
           </div>
 
-          <div className="space-y-2 pt-1">
+          <div className="space-y-1.5 pt-0.5">
             <div className="flex justify-between items-center text-muted-foreground text-xs">
               <span>Subtotal</span>
-              <span className="text-foreground font-medium">${cartTotal.toLocaleString()}</span>
+              <span className="text-foreground font-semibold">${cartTotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center text-muted-foreground text-xs">
               <span>Neto</span>
-              <span className="text-foreground font-medium">${neto.toLocaleString()}</span>
+              <span className="text-foreground font-semibold">${neto.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center text-muted-foreground text-xs">
               <span>IVA (19%)</span>
-              <span className="text-foreground font-medium">${iva.toLocaleString()}</span>
+              <span className="text-foreground font-semibold">${iva.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between items-center text-primary text-3xl font-black uppercase tracking-tighter pt-2 border-t border-primary/5">
-              <span>Total</span>
+            <div className="flex justify-between items-center text-primary text-2xl font-black uppercase tracking-tight pt-2 border-t border-border">
+              <span>Total a Pagar</span>
               <span>${finalTotal.toLocaleString()}</span>
             </div>
           </div>
 
           <Button 
-            onClick={handleCheckout}
-            disabled={cart.length === 0 || createSale.isPending || (paymentMethod === 'credito' && clientId === "general")}
-            className="w-full h-16 rounded-3xl bg-primary text-lg font-black shadow-xl shadow-primary/20 group active:scale-95 transition-all"
+            onClick={handleCheckout} 
+            disabled={cart.length === 0 || createSale.isPending || (paymentMethod === 'credito' && clientId === "general")} 
+            className="w-full h-14 rounded-2xl bg-primary text-base font-black shadow-xl shadow-primary/20 group active:scale-95 transition-all text-primary-foreground"
           >
             {createSale.isPending ? "PROCESANDO..." : (
-              <span className="flex items-center justify-center gap-3 uppercase tracking-widest">
-                COBRAR AHORA <ChevronRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
+              <span className="flex items-center justify-center gap-2 uppercase tracking-wider">
+                COBRAR AHORA <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </span>
             )}
-            </Button>
-          </div>
-        </Card>
+          </Button>
+        </div>
+      </div>
       </div>
       </TabsContent>
 
