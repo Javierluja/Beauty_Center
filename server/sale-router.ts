@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { createRouter, authedQuery, adminQuery } from "./middleware.js";
 import {
   findAllSales,
@@ -281,7 +282,23 @@ export const saleRouter = createRouter({
         dateTo: z.date().or(z.string().transform((val) => new Date(val))),
       })
     )
-    .query(({ input }) => {
+    .query(({ input, ctx }) => {
+      const isStaffAdmin = ctx.user.role === "admin" || ctx.user.role === "admin_pro";
+      let hasPerm = isStaffAdmin;
+      if (!hasPerm && ctx.user.permissions) {
+        try {
+          const p = typeof ctx.user.permissions === "string" ? JSON.parse(ctx.user.permissions) : ctx.user.permissions;
+          if (p?.cierre_caja === true) hasPerm = true;
+        } catch {}
+      }
+
+      if (!hasPerm) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "No tienes permiso para acceder al Cierre de Caja.",
+        });
+      }
+
       const from = input.dateFrom instanceof Date ? input.dateFrom : new Date(input.dateFrom);
       const to = input.dateTo instanceof Date ? input.dateTo : new Date(input.dateTo);
       return getCierreCajaData(from, to);

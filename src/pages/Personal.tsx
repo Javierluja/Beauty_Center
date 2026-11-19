@@ -29,8 +29,29 @@ import {
   Sparkles,
   Activity,
   Monitor,
+  ReceiptText,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+const SYSTEM_MODULES = [
+  { key: "agenda", label: "Agenda de Citas", desc: "Gestión de citas y reservas" },
+  { key: "avisos", label: "Avisos", desc: "Campañas y notificaciones" },
+  { key: "ventas", label: "Punto de Venta", desc: "Emisión de comandas y ventas" },
+  { 
+    key: "cierre_caja", 
+    label: "Cierre de Caja", 
+    desc: "Arqueo semanal/mensual y exportación Excel (Solo Admin por defecto)",
+    badge: "Nuevo"
+  },
+  { key: "compras", label: "Compras", desc: "Facturas e insumos de proveedores" },
+  { key: "sesiones", label: "Sesiones", desc: "Control de packs de tratamientos" },
+  { key: "productos", label: "Productos", desc: "Inventario y control de stock" },
+  { key: "servicios", label: "Servicios", desc: "Catálogo y tarifas de estética" },
+  { key: "cuentas", label: "Cuentas", desc: "Balance y abonos de clientes" },
+  { key: "clientes", label: "Clientes", desc: "Fichas e historial de clientes" },
+  { key: "gastos", label: "Gastos", desc: "Egresos y costos operativos" },
+  { key: "personal", label: "Personal", desc: "Administración de usuarios (Solo Admin Pro)" },
+];
 
 export default function Personal() {
   const { toast } = useToast();
@@ -68,7 +89,37 @@ export default function Personal() {
 
   const [permDialogOpen, setPermDialogOpen] = useState(false);
   const [permUserId, setPermUserId] = useState<number | null>(null);
-  const [perms, setPerms] = useState<Record<string, boolean>>({ gastos: true, productos: true, compras: true, agenda: true, avisos: true, ventas: true, sesiones: true, personal: false });
+  const [permUser, setPermUser] = useState<any | null>(null);
+  const [perms, setPerms] = useState<Record<string, boolean>>({});
+
+  function handleOpenPerms(targetUser: any) {
+    setPermUser(targetUser);
+    setPermUserId(targetUser.id);
+    let p: any = {};
+    try {
+      p = typeof targetUser.permissions === "string" ? JSON.parse(targetUser.permissions) : targetUser.permissions;
+    } catch {}
+
+    const isTargetAdmin = targetUser.role === "admin" || targetUser.role === "admin_pro";
+    const initialPerms: Record<string, boolean> = {};
+
+    SYSTEM_MODULES.forEach((mod) => {
+      if (p && p[mod.key] !== undefined) {
+        initialPerms[mod.key] = Boolean(p[mod.key]);
+      } else {
+        if (mod.key === "personal") {
+          initialPerms[mod.key] = targetUser.role === "admin_pro";
+        } else if (mod.key === "cierre_caja") {
+          initialPerms[mod.key] = isTargetAdmin;
+        } else {
+          initialPerms[mod.key] = true;
+        }
+      }
+    });
+
+    setPerms(initialPerms);
+    setPermDialogOpen(true);
+  }
 
   const updatePerms = trpc.user.updatePermissions.useMutation({
     onSuccess: () => {
@@ -146,16 +197,41 @@ export default function Personal() {
                     {user.role === 'admin_pro' ? 'Admin Pro' : user.role === 'admin' ? 'Administrador' : 'Ventas'}
                   </Badge>
                 </div>
+
+                {/* Estado rápido de Cierre de Caja */}
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  {user.role === 'admin_pro' || user.role === 'admin' ? (
+                    <Badge variant="outline" className="text-[10px] bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border-teal-300 font-bold flex items-center gap-1">
+                      <ReceiptText className="h-3 w-3 text-teal-600" /> Cierre de Caja Habilitado (Admin)
+                    </Badge>
+                  ) : (
+                    (() => {
+                      let up: any = {};
+                      try {
+                        up = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
+                      } catch {}
+                      const hasCierre = up?.cierre_caja === true;
+                      return (
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] font-bold flex items-center gap-1 ${
+                            hasCierre
+                              ? "bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border-teal-400"
+                              : "bg-muted text-muted-foreground border-border"
+                          }`}
+                        >
+                          <ReceiptText className="h-3 w-3" />
+                          {hasCierre ? "Cierre de Caja Habilitado" : "Cierre de Caja Deshabilitado"}
+                        </Badge>
+                      );
+                    })()
+                  )}
+                </div>
                 
                 <div className="flex items-center justify-between mt-5 pt-4 border-t border-border">
                   <p className="text-[9px] md:text-[10px] text-muted-foreground font-semibold">Acceso Habilitado</p>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => { 
-                      setPermUserId(user.id); 
-                      const p = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
-                      setPerms(p || { gastos: true, productos: true, compras: true, agenda: true, avisos: true, ventas: true, sesiones: true, cuentas: true, clientes: true, personal: false }); 
-                      setPermDialogOpen(true); 
-                    }} className="h-9 md:h-10 px-3 md:px-4 rounded-xl text-[10px] md:text-xs font-bold uppercase border-primary/20 hover:bg-primary/5 text-primary">
+                    <Button variant="outline" size="sm" onClick={() => handleOpenPerms(user)} className="h-9 md:h-10 px-3 md:px-4 rounded-xl text-[10px] md:text-xs font-bold uppercase border-primary/20 hover:bg-primary/5 text-primary">
                       Permisos
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => { if(confirm("¿Quitar acceso a este usuario?")) deleteMutation.mutate(user.id) }} className="h-9 w-9 md:h-10 md:w-10 text-destructive hover:bg-destructive/10 rounded-xl border border-destructive/10">
@@ -226,20 +302,83 @@ export default function Personal() {
       </div>
 
       <Dialog open={permDialogOpen} onOpenChange={setPermDialogOpen}>
-        <DialogContent className="max-w-xs rounded-3xl bg-card border border-border">
-          <DialogHeader><DialogTitle className="font-black uppercase">Permisos del Sistema</DialogTitle></DialogHeader>
-          <div className="space-y-2 py-4 max-h-[60vh] overflow-y-auto no-scrollbar">
-            {Object.entries(perms).map(([key, val]) => (
-              <div key={key} className="flex items-center justify-between p-3 border border-border rounded-xl">
-                <span className="font-bold text-sm capitalize">Módulo {key}</span>
-                <div onClick={() => setPerms({...perms, [key]: !val})} className={`h-6 w-11 rounded-full cursor-pointer relative transition-colors ${val ? 'bg-primary' : 'bg-muted-foreground/30'}`}>
-                  <div className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform ${val ? 'translate-x-6' : 'translate-x-1'}`} />
+        <DialogContent className="max-w-md w-[95vw] rounded-3xl bg-card border border-border p-6 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-black text-foreground uppercase tracking-tight flex items-center justify-between">
+              <span>Permisos del Sistema</span>
+              {permUser && (
+                <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary border-primary/30">
+                  {permUser.name} ({permUser.role === 'admin_pro' ? 'Admin Pro' : permUser.role === 'admin' ? 'Admin' : 'Ventas'})
+                </Badge>
+              )}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              Habilita o deshabilita los módulos a los que este colaborador tiene acceso.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-2 py-3 max-h-[60vh] overflow-y-auto no-scrollbar pr-1">
+            {SYSTEM_MODULES.map((mod) => {
+              const val = perms[mod.key] ?? false;
+              const isCierre = mod.key === "cierre_caja";
+              return (
+                <div
+                  key={mod.key}
+                  className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                    isCierre
+                      ? "border-teal-400 bg-teal-50/60 dark:bg-teal-950/40 dark:border-teal-700 shadow-sm"
+                      : "border-border bg-card hover:border-primary/20"
+                  }`}
+                >
+                  <div className="space-y-0.5 pr-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-black text-xs md:text-sm text-foreground">
+                        {mod.label}
+                      </span>
+                      {mod.badge && (
+                        <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-teal-600 text-white shadow-xs">
+                          {mod.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-tight">
+                      {mod.desc}
+                    </p>
+                  </div>
+
+                  {/* Toggle switch */}
+                  <div
+                    onClick={() => setPerms({ ...perms, [mod.key]: !val })}
+                    className={`h-6 w-11 rounded-full cursor-pointer relative shrink-0 transition-colors ${
+                      val
+                        ? isCierre
+                          ? "bg-teal-600"
+                          : "bg-primary"
+                        : "bg-muted-foreground/30"
+                    }`}
+                  >
+                    <div
+                      className={`h-4 w-4 bg-background rounded-full absolute top-1 shadow-sm transition-transform ${
+                        val ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <Button onClick={() => updatePerms.mutate({ userId: permUserId!, permissions: JSON.stringify(perms) })} className="w-full bg-primary font-black uppercase rounded-xl h-12" disabled={updatePerms.isPending}>
-            Guardar Permisos
+
+          <Button
+            onClick={() =>
+              updatePerms.mutate({
+                userId: permUserId!,
+                permissions: JSON.stringify(perms),
+              })
+            }
+            className="w-full bg-primary font-black uppercase rounded-2xl h-12 shadow-lg"
+            disabled={updatePerms.isPending}
+          >
+            {updatePerms.isPending ? "Guardando..." : "Guardar Permisos"}
           </Button>
         </DialogContent>
       </Dialog>

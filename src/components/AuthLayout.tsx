@@ -36,7 +36,7 @@ const menuItems = [
   { icon: CalendarDays,    label: "Agenda",     path: "/agenda", permKey: "agenda" },
   { icon: Bell,           label: "Avisos",      path: "/notificaciones", permKey: "avisos" },
   { icon: ShoppingCart,   label: "Ventas",      path: "/ventas", permKey: "ventas" },
-  { icon: ReceiptText,    label: "Cierre de Caja", path: "/cierre-caja", permKey: "ventas" },
+  { icon: ReceiptText,    label: "Cierre de Caja", path: "/cierre-caja", permKey: "cierre_caja" },
   { icon: ShoppingBag,    label: "Compras",     path: "/compras", permKey: "compras" },
   { icon: Sparkles,       label: "Sesiones",    path: "/sesiones", permKey: "sesiones" },
   { icon: Package,        label: "Productos",   path: "/productos", permKey: "productos" },
@@ -82,14 +82,32 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
   const filteredMenu = menuItems.filter(item => {
     if (user.role === 'admin_pro') return true;
-    // Si no es admin_pro, verificamos sus permisos (por defecto true excepto si explícitamente es false)
-    if (item.permKey === 'personal') return false; // Personal siempre bloqueado para no-admins por seguridad extra
+    if (user.role === 'admin') {
+      if (item.permKey === 'personal') return false; // Personal solo admin_pro
+      return true; // Admin ve cierre de caja y los demás módulos
+    }
+
+    // Para colaboradores / rol ventas:
+    if (item.permKey === 'personal') return false;
+    
+    // Cierre de caja: solo visible si el administrador lo habilitó expresamente en sus permisos
+    if (item.permKey === 'cierre_caja') {
+      return userPerms['cierre_caja'] === true;
+    }
+
     if (userPerms[item.permKey] === false) return false;
     return true;
   });
 
   if (location.pathname === '/personal' && user.role !== 'admin_pro') {
     return <Navigate to="/" replace />;
+  }
+
+  if (location.pathname === '/cierre-caja') {
+    const hasCierreAccess = user.role === 'admin_pro' || user.role === 'admin' || userPerms['cierre_caja'] === true;
+    if (!hasCierreAccess) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return (

@@ -87,6 +87,18 @@ export default function Ventas() {
   // Control de permisos: Solo admin y admin_pro pueden modificar ventas registradas
   const canEditSales = user?.role === 'admin' || user?.role === 'admin_pro';
 
+  // Acceso al Cierre de Caja: admin, admin_pro o permiso explícito 'cierre_caja'
+  const canAccessCierre = useMemo(() => {
+    if (user?.role === 'admin_pro' || user?.role === 'admin') return true;
+    if (!user?.permissions) return false;
+    try {
+      const p = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
+      return p?.cierre_caja === true;
+    } catch {
+      return false;
+    }
+  }, [user]);
+
   // Estado para la modificación de ventas
   const [editingSale, setEditingSale] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({
@@ -411,12 +423,14 @@ export default function Ventas() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black text-foreground tracking-tight">Punto de Venta</h1>
-        <Link to="/cierre-caja">
-          <Button variant="outline" className="h-9 px-3 rounded-xl border-teal-600/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950 font-bold text-xs uppercase flex items-center gap-2 shadow-sm">
-            <ReceiptText className="h-4 w-4 text-teal-600" />
-            Cierre de Caja
-          </Button>
-        </Link>
+        {canAccessCierre && (
+          <Link to="/cierre-caja">
+            <Button variant="outline" className="h-9 px-3 rounded-xl border-teal-600/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950 font-bold text-xs uppercase flex items-center gap-2 shadow-sm">
+              <ReceiptText className="h-4 w-4 text-teal-600" />
+              Cierre de Caja
+            </Button>
+          </Link>
+        )}
       </div>
 
       <Tabs defaultValue="caja" className="w-full h-full flex flex-col">
