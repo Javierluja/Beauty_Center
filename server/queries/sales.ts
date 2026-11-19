@@ -104,6 +104,7 @@ export async function updateSale(id: number, data: {
   finalTotal?: string;
   amountPaid?: string;
   notes?: string;
+  createdAt?: Date;
   items?: Array<{
     id: number;
     quantity?: number;
@@ -123,6 +124,7 @@ export async function updateSale(id: number, data: {
   if (data.finalTotal !== undefined) updates.finalTotal = data.finalTotal;
   if (data.amountPaid !== undefined) updates.amountPaid = data.amountPaid;
   if (data.notes !== undefined) updates.notes = data.notes;
+  if (data.createdAt !== undefined) updates.createdAt = data.createdAt;
 
   // Si se cambia a estado pagado y no se especificó un amountPaid manual, se iguala al finalTotal
   if (data.status === "paid" && data.amountPaid === undefined) {
@@ -158,6 +160,7 @@ export async function createSale(data: {
   amountPaid?: string;
   notes?: string;
   createdBy?: number;
+  createdAt?: Date;
 }) {
   try {
     const db = getDb();

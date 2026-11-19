@@ -37,6 +37,7 @@ export const saleRouter = createRouter({
         finalTotal: z.string().optional(),
         amountPaid: z.string().optional(),
         notes: z.string().optional(),
+        saleDate: z.string().optional(),
         items: z.array(
           z.object({
             id: z.number(),
@@ -48,7 +49,27 @@ export const saleRouter = createRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const updated = await updateSale(input.id, input);
+      const { saleDate, ...rest } = input;
+      let customCreatedAt: Date | undefined;
+      if (saleDate && saleDate.trim()) {
+        if (saleDate.length === 10) {
+          const now = new Date();
+          const hours = String(now.getHours()).padStart(2, '0');
+          const minutes = String(now.getMinutes()).padStart(2, '0');
+          const seconds = String(now.getSeconds()).padStart(2, '0');
+          customCreatedAt = new Date(`${saleDate}T${hours}:${minutes}:${seconds}`);
+        } else {
+          customCreatedAt = new Date(saleDate);
+        }
+        if (isNaN(customCreatedAt.getTime())) {
+          customCreatedAt = undefined;
+        }
+      }
+
+      const updated = await updateSale(input.id, {
+        ...rest,
+        createdAt: customCreatedAt,
+      });
 
       // Sincronización Webhook a Google Sheets de la modificación
       try {
@@ -63,7 +84,7 @@ export const saleRouter = createRouter({
             metodo: updated?.paymentMethod,
             estado: updated?.status,
             modificadoPor: ctx.user.name,
-            fecha: new Date().toLocaleString('es-ES')
+            fecha: updated?.createdAt ? new Date(updated.createdAt).toLocaleString('es-ES') : new Date().toLocaleString('es-ES')
           })
         }).catch(err => console.error("[Webhook Error]:", err));
       } catch (e) {
@@ -114,6 +135,7 @@ export const saleRouter = createRouter({
         paymentMethod: z.string(),
         status: z.string().optional().default("paid"),
         notes: z.string().optional(),
+        saleDate: z.string().optional(),
         items: z.array(
           z.object({
             type: z.string(), // Cambiado a string para mayor flexibilidad
@@ -126,10 +148,27 @@ export const saleRouter = createRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { items, ...saleData } = input;
+      const { items, saleDate, ...saleData } = input;
       
       const subtotal = items.reduce((acc, i) => acc + (Number(i.unitPrice) * i.quantity), 0);
       const finalTotal = subtotal - Number(saleData.discount || 0);
+
+      // Manejo de fecha retroactiva si se seleccionó una fecha específica
+      let customCreatedAt: Date | undefined;
+      if (saleDate && saleDate.trim()) {
+        if (saleDate.length === 10) {
+          const now = new Date();
+          const hours = String(now.getHours()).padStart(2, '0');
+          const minutes = String(now.getMinutes()).padStart(2, '0');
+          const seconds = String(now.getSeconds()).padStart(2, '0');
+          customCreatedAt = new Date(`${saleDate}T${hours}:${minutes}:${seconds}`);
+        } else {
+          customCreatedAt = new Date(saleDate);
+        }
+        if (isNaN(customCreatedAt.getTime())) {
+          customCreatedAt = undefined;
+        }
+      }
 
       // --- LOGIC PARA GIFTCARD ---
       if (saleData.paymentMethod === 'gift_card') {
@@ -153,6 +192,7 @@ export const saleRouter = createRouter({
         total: subtotal.toString(),
         finalTotal: finalTotal.toString(),
         createdBy: ctx.user.id,
+        createdAt: customCreatedAt,
       });
 
       if (sale) {
@@ -186,7 +226,7 @@ export const saleRouter = createRouter({
               cliente: clientName,
               total: finalTotal.toString(),
               metodo: saleData.paymentMethod,
-              fecha: new Date().toLocaleString('es-ES')
+              fecha: customCreatedAt ? customCreatedAt.toLocaleString('es-ES') : new Date().toLocaleString('es-ES')
             })
           }).catch(err => console.error("[Webhook Error]:", err));
         } catch (e) {

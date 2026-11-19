@@ -40,6 +40,7 @@ import {
   Pencil,
   ShieldCheck,
   Save,
+  Calendar,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -58,6 +59,7 @@ export default function Ventas() {
   const [cart, setCart] = useState<any[]>([]);
   const [clientId, setClientId] = useState<string>("general");
   const [paymentMethod, setPaymentMethod] = useState<string>("contado");
+  const [saleDate, setSaleDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [discount, setDiscount] = useState("0");
   const [viewingSaleId, setViewingSaleId] = useState<number | null>(null);
 
@@ -81,6 +83,7 @@ export default function Ventas() {
     finalTotal: "0",
     amountPaid: "0",
     notes: "",
+    saleDate: new Date().toLocaleDateString('en-CA'),
   });
   const [editItems, setEditItems] = useState<any[]>([]);
 
@@ -125,6 +128,7 @@ export default function Ventas() {
       utils.sale.dailySummary.invalidate();
       setCart([]);
       setDiscount("0");
+      setSaleDate(new Date().toLocaleDateString('en-CA'));
       toast({ title: "¡Venta realizada! ✨" });
     },
     onError: (err) => {
@@ -175,6 +179,10 @@ export default function Ventas() {
       ? Math.round(Number(sale.amountPaid)).toString() 
       : (sale.status === 'paid' ? finalVal : "0");
 
+    const dateVal = sale.createdAt 
+      ? new Date(sale.createdAt).toLocaleDateString('en-CA') 
+      : new Date().toLocaleDateString('en-CA');
+
     setEditForm({
       paymentMethod: sale.paymentMethod || "contado",
       status: sale.status || "paid",
@@ -183,6 +191,7 @@ export default function Ventas() {
       finalTotal: finalVal,
       amountPaid: paidVal,
       notes: sale.notes || "",
+      saleDate: dateVal,
     });
 
     try {
@@ -267,6 +276,7 @@ export default function Ventas() {
       finalTotal: editForm.finalTotal,
       amountPaid: editForm.amountPaid,
       notes: editForm.notes,
+      saleDate: editForm.saleDate,
       items: editItems.map(it => ({
         id: it.id,
         quantity: it.quantity,
@@ -348,6 +358,7 @@ export default function Ventas() {
       total: cartTotal.toString(),
       finalTotal: finalTotal.toString(),
       status: paymentMethod === 'credito' ? 'pending' : 'paid',
+      saleDate: saleDate,
       items: cart.map(i => ({
         type: i.type === 'servicio' ? 'service' : 'product',
         itemId: i.id,
@@ -388,9 +399,9 @@ export default function Ventas() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-card p-3 rounded-2xl border border-border shadow-sm">
           <div className="space-y-1">
-            <Label className="text-[10px] font-medium uppercase text-muted-foreground ml-1">Cliente</Label>
+            <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Cliente</Label>
             <Select value={clientId} onValueChange={setClientId}>
               <SelectTrigger className="rounded-xl border-primary/10 h-10 bg-background font-bold text-xs">
                 <SelectValue />
@@ -402,7 +413,7 @@ export default function Ventas() {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px] font-black uppercase text-slate-800 ml-1">Forma de Pago</Label>
+            <Label className="text-[10px] font-black uppercase text-foreground ml-1">Forma de Pago</Label>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
               <SelectTrigger className="rounded-xl border-primary/10 h-10 bg-background font-bold text-xs">
                 <SelectValue />
@@ -419,6 +430,30 @@ export default function Ventas() {
                 )})}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between ml-1">
+              <Label className="text-[10px] font-black uppercase text-foreground flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-primary" /> Fecha de Venta
+              </Label>
+              {saleDate !== new Date().toLocaleDateString('en-CA') && (
+                <button
+                  type="button"
+                  onClick={() => setSaleDate(new Date().toLocaleDateString('en-CA'))}
+                  className="text-[9px] font-bold text-primary hover:underline uppercase"
+                >
+                  Hoy
+                </button>
+              )}
+            </div>
+            <Input
+              type="date"
+              value={saleDate}
+              onChange={(e) => setSaleDate(e.target.value)}
+              className={`rounded-xl border-primary/10 h-10 bg-background font-bold text-xs ${
+                saleDate !== new Date().toLocaleDateString('en-CA') ? 'border-primary ring-1 ring-primary/30 bg-primary/5 text-primary' : ''
+              }`}
+            />
           </div>
         </div>
 
@@ -601,6 +636,14 @@ export default function Ventas() {
               <span>${finalTotal.toLocaleString()}</span>
             </div>
           </div>
+
+          {saleDate !== new Date().toLocaleDateString('en-CA') && (
+            <div className="bg-primary/10 border border-primary/30 p-2 rounded-xl text-center">
+              <p className="text-[10px] font-black uppercase text-primary flex items-center justify-center gap-1">
+                <Calendar className="h-3 w-3" /> Venta Retroactiva: {new Date(`${saleDate}T12:00:00`).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            </div>
+          )}
 
           <Button 
             onClick={handleCheckout} 
@@ -852,8 +895,8 @@ export default function Ventas() {
 
           {editingSale && (
             <div className="space-y-4 pt-3">
-              {/* ESTADO Y MÉTODO DE PAGO */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* ESTADO, MÉTODO DE PAGO Y FECHA */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <Label className="text-[10px] font-black uppercase text-foreground">Estado de la Venta</Label>
                   <Select 
@@ -900,6 +943,18 @@ export default function Ventas() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-foreground flex items-center gap-1">
+                    <Calendar className="h-3 w-3 text-primary" /> Fecha de Venta
+                  </Label>
+                  <Input
+                    type="date"
+                    value={editForm.saleDate}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, saleDate: e.target.value }))}
+                    className="h-9 rounded-xl text-xs font-bold"
+                  />
                 </div>
               </div>
 
