@@ -31,6 +31,7 @@ export async function findAllSales(filters?: {
       id: sales.id,
       clientId: sales.clientId,
       total: sales.total,
+      discount: sales.discount,
       finalTotal: sales.finalTotal,
       amountPaid: sales.amountPaid,
       paymentMethod: sales.paymentMethod,
@@ -53,6 +54,7 @@ export async function findSaleById(id: number) {
       id: sales.id,
       clientId: sales.clientId,
       total: sales.total,
+      discount: sales.discount,
       finalTotal: sales.finalTotal,
       amountPaid: sales.amountPaid,
       paymentMethod: sales.paymentMethod,
@@ -91,6 +93,58 @@ export async function updateSaleAbono(id: number, newAbono: string) {
   const status = totalPaid >= Number(sale.finalTotal) ? "paid" : "pending";
   
   await db.update(sales).set({ amountPaid: totalPaid.toString(), status }).where(eq(sales.id, id));
+  return findSaleById(id);
+}
+
+export async function updateSale(id: number, data: {
+  paymentMethod?: string;
+  status?: string;
+  total?: string;
+  discount?: string;
+  finalTotal?: string;
+  amountPaid?: string;
+  notes?: string;
+  items?: Array<{
+    id: number;
+    quantity?: number;
+    unitPrice?: string;
+    totalPrice?: string;
+  }>;
+}) {
+  const db = getDb();
+  const sale = await findSaleById(id);
+  if (!sale) throw new Error("Sale not found");
+
+  const updates: any = {};
+  if (data.paymentMethod !== undefined) updates.paymentMethod = data.paymentMethod;
+  if (data.status !== undefined) updates.status = data.status;
+  if (data.total !== undefined) updates.total = data.total;
+  if (data.discount !== undefined) updates.discount = data.discount;
+  if (data.finalTotal !== undefined) updates.finalTotal = data.finalTotal;
+  if (data.amountPaid !== undefined) updates.amountPaid = data.amountPaid;
+  if (data.notes !== undefined) updates.notes = data.notes;
+
+  // Si se cambia a estado pagado y no se especificó un amountPaid manual, se iguala al finalTotal
+  if (data.status === "paid" && data.amountPaid === undefined) {
+    updates.amountPaid = data.finalTotal || sale.finalTotal;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await db.update(sales).set(updates).where(eq(sales.id, id));
+  }
+
+  if (data.items && data.items.length > 0) {
+    for (const item of data.items) {
+      const itemUpdates: any = {};
+      if (item.quantity !== undefined) itemUpdates.quantity = item.quantity;
+      if (item.unitPrice !== undefined) itemUpdates.unitPrice = item.unitPrice;
+      if (item.totalPrice !== undefined) itemUpdates.totalPrice = item.totalPrice;
+      if (Object.keys(itemUpdates).length > 0) {
+        await db.update(saleItems).set(itemUpdates).where(eq(saleItems.id, item.id));
+      }
+    }
+  }
+
   return findSaleById(id);
 }
 

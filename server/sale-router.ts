@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createRouter, authedQuery } from "./middleware.js";
+import { createRouter, authedQuery, adminQuery } from "./middleware.js";
 import {
   findAllSales,
   findSaleById,
@@ -9,6 +9,7 @@ import {
   getDailyPaymentMethods,
   updateSaleStatus,
   updateSaleAbono,
+  updateSale,
   findSaleItems,
 } from "./queries/sales.js";
 import { getDailySummary } from "./queries/expenses.js"; // Importación verificada
@@ -24,6 +25,53 @@ export const saleRouter = createRouter({
       }).optional()
     )
     .query(({ input }) => findAllSales(input)),
+
+  update: adminQuery
+    .input(
+      z.object({
+        id: z.number(),
+        paymentMethod: z.string().optional(),
+        status: z.string().optional(),
+        total: z.string().optional(),
+        discount: z.string().optional(),
+        finalTotal: z.string().optional(),
+        amountPaid: z.string().optional(),
+        notes: z.string().optional(),
+        items: z.array(
+          z.object({
+            id: z.number(),
+            quantity: z.number().optional(),
+            unitPrice: z.string().optional(),
+            totalPrice: z.string().optional(),
+          })
+        ).optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const updated = await updateSale(input.id, input);
+
+      // Sincronización Webhook a Google Sheets de la modificación
+      try {
+        let clientName = updated?.clientName || "Cliente General";
+        fetch("https://script.google.com/macros/s/AKfycbz_Xa916OIVWUyKwhpM4K73vntd0kaxgtuGuOG8fTdkkwg9mHAzLM9yLbhDU1i5z9c_Dg/exec", {
+          method: "POST",
+          body: JSON.stringify({
+            tipo: "venta_modificada",
+            id: updated?.id,
+            cliente: clientName,
+            total: updated?.finalTotal,
+            metodo: updated?.paymentMethod,
+            estado: updated?.status,
+            modificadoPor: ctx.user.name,
+            fecha: new Date().toLocaleString('es-ES')
+          })
+        }).catch(err => console.error("[Webhook Error]:", err));
+      } catch (e) {
+        console.error("[Webhook Error] Could not send data to Google Sheets", e);
+      }
+
+      return updated;
+    }),
 
   updateStatus: authedQuery
     .input(z.object({

@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,9 @@ import {
   ChevronRight,
   Hash,
   Trash2,
+  Pencil,
+  ShieldCheck,
+  Save,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -62,6 +66,23 @@ export default function Ventas() {
   const { data: clients } = trpc.customers.list.useQuery();
   const { data: salesHistory, isLoading: loadingSales } = trpc.sale.list.useQuery();
   const { data: saleItems, isLoading: loadingItems } = trpc.sale.getItems.useQuery(viewingSaleId || 0, { enabled: !!viewingSaleId });
+  const { data: user } = trpc.auth.me.useQuery();
+
+  // Control de permisos: Solo admin y admin_pro pueden modificar ventas registradas
+  const canEditSales = user?.role === 'admin' || user?.role === 'admin_pro';
+
+  // Estado para la modificación de ventas
+  const [editingSale, setEditingSale] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    paymentMethod: "contado",
+    status: "paid",
+    total: "0",
+    discount: "0",
+    finalTotal: "0",
+    amountPaid: "0",
+    notes: "",
+  });
+  const [editItems, setEditItems] = useState<any[]>([]);
 
   const groupedServices = useMemo(() => {
     const term = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -110,6 +131,150 @@ export default function Ventas() {
       toast({ title: "Error en la venta", description: err.message, variant: "destructive" });
     }
   });
+
+  const updateSaleMutation = trpc.sale.update.useMutation({
+    onSuccess: () => {
+      utils.sale.list.invalidate();
+      utils.sale.summary.invalidate();
+      utils.sale.dailySummary.invalidate();
+      utils.sale.paymentMethodsDetail.invalidate();
+      utils.customers.list.invalidate();
+      toast({
+        title: "¡Venta modificada con éxito! ✨",
+        description: `Los datos de la venta #${editingSale?.id} han sido actualizados.`,
+      });
+      setEditingSale(null);
+      if (viewingSaleId) {
+        utils.sale.getItems.invalidate(viewingSaleId);
+      }
+    },
+    onError: (err) => {
+      toast({
+        title: "Error al actualizar venta",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  async function handleOpenEdit(sale: any) {
+    if (!canEditSales) {
+      toast({
+        title: "Acceso denegado",
+        description: "Solo los administradores pueden modificar registros de venta.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setEditingSale(sale);
+    const subtotal = sale.total ? Math.round(Number(sale.total)).toString() : "0";
+    const discountVal = sale.discount ? Math.round(Number(sale.discount)).toString() : "0";
+    const finalVal = sale.finalTotal ? Math.round(Number(sale.finalTotal)).toString() : "0";
+    const paidVal = sale.amountPaid 
+      ? Math.round(Number(sale.amountPaid)).toString() 
+      : (sale.status === 'paid' ? finalVal : "0");
+
+    setEditForm({
+      paymentMethod: sale.paymentMethod || "contado",
+      status: sale.status || "paid",
+      total: subtotal,
+      discount: discountVal,
+      finalTotal: finalVal,
+      amountPaid: paidVal,
+      notes: sale.notes || "",
+    });
+
+    try {
+      const items = await utils.sale.getItems.fetch(sale.id);
+      setEditItems(
+        (items || []).map((it: any) => ({
+          id: it.id,
+          name: it.name,
+          type: it.type,
+          quantity: it.quantity,
+          unitPrice: Math.round(Number(it.unitPrice)).toString(),
+          totalPrice: Math.round(Number(it.totalPrice)).toString(),
+        }))
+      );
+    } catch {
+      setEditItems([]);
+    }
+  }
+
+  function handleItemChange(itemId: number, field: 'quantity' | 'unitPrice', val: string) {
+    setEditItems(prev => {
+      const updated = prev.map(item => {
+        if (item.id === itemId) {
+          const qty = field === 'quantity' ? Math.max(1, parseInt(val) || 1) : item.quantity;
+          const price = field === 'unitPrice' ? Math.max(0, parseInt(val) || 0) : Number(item.unitPrice);
+          const total = qty * price;
+          return {
+            ...item,
+            quantity: qty,
+            unitPrice: price.toString(),
+            totalPrice: total.toString(),
+          };
+        }
+        return item;
+      });
+
+      const newSubtotal = updated.reduce((acc, it) => acc + Number(it.totalPrice), 0);
+      const discountNum = Number(editForm.discount) || 0;
+      const newFinal = Math.max(0, newSubtotal - discountNum);
+
+      setEditForm(f => ({
+        ...f,
+        total: newSubtotal.toString(),
+        finalTotal: newFinal.toString(),
+        amountPaid: f.status === 'paid' ? newFinal.toString() : f.amountPaid,
+      }));
+
+      return updated;
+    });
+  }
+
+  function handleTotalOrDiscountChange(newTotalStr: string, newDiscountStr: string) {
+    const tot = Math.max(0, Number(newTotalStr) || 0);
+    const disc = Math.max(0, Number(newDiscountStr) || 0);
+    const fin = Math.max(0, tot - disc);
+
+    setEditForm(prev => ({
+      ...prev,
+      total: newTotalStr,
+      discount: newDiscountStr,
+      finalTotal: fin.toString(),
+      amountPaid: prev.status === 'paid' ? fin.toString() : prev.amountPaid,
+    }));
+  }
+
+  function handleFinalTotalChange(val: string) {
+    setEditForm(prev => ({
+      ...prev,
+      finalTotal: val,
+      amountPaid: prev.status === 'paid' ? val : prev.amountPaid,
+    }));
+  }
+
+  function handleSaveEdit() {
+    if (!editingSale) return;
+    updateSaleMutation.mutate({
+      id: editingSale.id,
+      paymentMethod: editForm.paymentMethod,
+      status: editForm.status,
+      total: editForm.total,
+      discount: editForm.discount,
+      finalTotal: editForm.finalTotal,
+      amountPaid: editForm.amountPaid,
+      notes: editForm.notes,
+      items: editItems.map(it => ({
+        id: it.id,
+        quantity: it.quantity,
+        unitPrice: it.unitPrice,
+        totalPrice: it.totalPrice,
+      })),
+    });
+  }
 
   const cartTotal = cart.reduce((acc, item) => acc + (Number(item.price) * item.quantity), 0);
   const finalTotal = Math.max(0, cartTotal - Number(discount));
@@ -528,14 +693,35 @@ export default function Ventas() {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1">Estado</p>
-                        <Badge className={`uppercase font-black text-[9px] border-none ${sale.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                          {sale.status === 'paid' ? 'Pagado' : 'Pendiente'}
+                        <Badge className={`uppercase font-black text-[9px] border-none ${
+                          sale.status === 'paid' 
+                            ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400' 
+                            : sale.status === 'cancelled'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400'
+                            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400'
+                        }`}>
+                          {sale.status === 'paid' ? 'Pagado' : sale.status === 'cancelled' ? 'Cancelado' : 'Pendiente'}
                         </Badge>
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1">Total</p>
                         <p className="font-black text-primary text-xl tracking-tighter">${Number(sale.finalTotal).toLocaleString()}</p>
                       </div>
+                      {canEditSales && (
+                        <div className="flex items-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEdit(sale);
+                            }}
+                            className="h-8 px-2.5 rounded-lg border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground font-bold text-xs uppercase flex items-center gap-1 shadow-sm shrink-0"
+                          >
+                            <Pencil className="h-3.5 w-3.5" /> Modificar
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -573,8 +759,14 @@ export default function Ventas() {
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground font-semibold uppercase">Estado:</span>
-                    <Badge className={`uppercase font-black text-[9px] border-none ${viewingSale.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {viewingSale.status === 'paid' ? 'Pagado' : 'Pendiente'}
+                    <Badge className={`uppercase font-black text-[9px] border-none ${
+                      viewingSale.status === 'paid' 
+                        ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400' 
+                        : viewingSale.status === 'cancelled'
+                        ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400'
+                        : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400'
+                    }`}>
+                      {viewingSale.status === 'paid' ? 'Pagado' : viewingSale.status === 'cancelled' ? 'Cancelado' : 'Pendiente'}
                     </Badge>
                   </div>
                   {viewingSale.notes && (
@@ -614,12 +806,242 @@ export default function Ventas() {
                   <span>${Number(viewingSale.finalTotal).toLocaleString()}</span>
                 </div>
                 
-                <Button onClick={() => setViewingSaleId(null)} className="w-full bg-primary hover:bg-primary/90 font-bold h-11 rounded-xl shadow-lg uppercase text-xs">
-                  Cerrar Detalle
-                </Button>
+                <div className="flex gap-2 w-full pt-1">
+                  {canEditSales && (
+                    <Button 
+                      onClick={() => {
+                        const s = salesHistory?.find(sale => sale.id === viewingSaleId);
+                        setViewingSaleId(null);
+                        if (s) handleOpenEdit(s);
+                      }} 
+                      className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 rounded-xl shadow-lg uppercase text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <Pencil className="h-4 w-4" /> Modificar Venta
+                    </Button>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setViewingSaleId(null)} 
+                    className={`${canEditSales ? 'flex-1' : 'w-full'} font-bold h-11 rounded-xl uppercase text-xs`}
+                  >
+                    Cerrar Detalle
+                  </Button>
+                </div>
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG PARA MODIFICAR REGISTRO DE VENTA (SOLO ADMIN Y ADMIN PRO) */}
+      <Dialog open={!!editingSale} onOpenChange={(open) => !open && setEditingSale(null)}>
+        <DialogContent className="max-w-lg w-[95vw] rounded-2xl border-border bg-card max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-2 border-b border-border">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="font-black text-primary uppercase flex items-center gap-2 text-base">
+                <Pencil className="h-4 w-4" /> Modificar Venta #{editingSale?.id}
+              </DialogTitle>
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black uppercase flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3" /> Solo Administrador
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Cliente: <span className="font-bold text-foreground uppercase">{editingSale?.clientName || "Cliente General"}</span> · {editingSale && new Date(editingSale.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </DialogHeader>
+
+          {editingSale && (
+            <div className="space-y-4 pt-3">
+              {/* ESTADO Y MÉTODO DE PAGO */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-foreground">Estado de la Venta</Label>
+                  <Select 
+                    value={editForm.status} 
+                    onValueChange={(val) => {
+                      setEditForm(prev => ({
+                        ...prev,
+                        status: val,
+                        amountPaid: val === 'paid' ? prev.finalTotal : (val === 'pending' && prev.amountPaid === prev.finalTotal ? "0" : prev.amountPaid)
+                      }));
+                    }}
+                  >
+                    <SelectTrigger className="h-9 rounded-xl text-xs font-bold">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="paid" className="text-xs font-bold text-green-600">
+                        🟢 Pagado
+                      </SelectItem>
+                      <SelectItem value="pending" className="text-xs font-bold text-yellow-600">
+                        🟡 Pendiente (Crédito)
+                      </SelectItem>
+                      <SelectItem value="cancelled" className="text-xs font-bold text-red-600">
+                        🔴 Cancelado / Anulado
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-foreground">Forma de Pago</Label>
+                  <Select 
+                    value={editForm.paymentMethod} 
+                    onValueChange={(val) => setEditForm(prev => ({ ...prev, paymentMethod: val }))}
+                  >
+                    <SelectTrigger className="h-9 rounded-xl text-xs font-bold uppercase">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {PAYMENT_METHODS.map(m => (
+                        <SelectItem key={m.id} value={m.id} className="text-xs font-bold uppercase">
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* ÍTEMS DE LA VENTA EDITABLES */}
+              {editItems.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-foreground">Ítems de la Venta (Precios y Cantidades)</Label>
+                  <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
+                    {editItems.map((item) => (
+                      <div key={item.id} className="p-2.5 bg-muted/40 rounded-xl border border-border flex items-center justify-between gap-2 text-xs">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-foreground uppercase truncate text-[11px]">{item.name}</p>
+                          <Badge variant="outline" className="text-[8px] px-1 py-0 border-none bg-primary/10 text-primary uppercase font-bold">
+                            {item.type === 'product' ? 'Producto' : 'Servicio'}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="w-14">
+                            <span className="text-[8px] text-muted-foreground uppercase block font-semibold">Cant.</span>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
+                              className="h-7 text-xs font-bold px-1.5"
+                            />
+                          </div>
+                          <div className="w-20">
+                            <span className="text-[8px] text-muted-foreground uppercase block font-semibold">P. Unit ($)</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={item.unitPrice}
+                              onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)}
+                              className="h-7 text-xs font-bold px-1.5 text-right"
+                            />
+                          </div>
+                          <div className="w-18 text-right">
+                            <span className="text-[8px] text-muted-foreground uppercase block font-semibold">Subtotal</span>
+                            <span className="font-black text-primary text-xs leading-7 block">
+                              ${Number(item.totalPrice).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TOTALES Y PRECIOS */}
+              <div className="p-3 bg-muted/30 rounded-xl border border-border space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase text-foreground">Subtotal ($)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={editForm.total}
+                      onChange={(e) => handleTotalOrDiscountChange(e.target.value, editForm.discount)}
+                      className="h-8 text-xs font-bold text-right"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase text-foreground">Descuento ($)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={editForm.discount}
+                      onChange={(e) => handleTotalOrDiscountChange(editForm.total, e.target.value)}
+                      className="h-8 text-xs font-bold text-right"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase text-primary">Total Final ($)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={editForm.finalTotal}
+                      onChange={(e) => handleFinalTotalChange(e.target.value)}
+                      className="h-8 text-xs font-black text-right text-primary bg-primary/5 border-primary/30"
+                    />
+                  </div>
+                </div>
+
+                {/* MONTO PAGADO Y SALDO PENDIENTE */}
+                <div className="pt-2 border-t border-border flex items-center justify-between gap-3">
+                  <div className="flex-1">
+                    <Label className="text-[10px] font-black uppercase text-foreground">Monto Pagado ($)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={editForm.amountPaid}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, amountPaid: e.target.value }))}
+                      className="h-8 text-xs font-bold text-right mt-1"
+                    />
+                  </div>
+
+                  <div className="text-right pt-3">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase block">Saldo Pendiente:</span>
+                    <span className={`text-sm font-black ${Math.max(0, Number(editForm.finalTotal) - Number(editForm.amountPaid || 0)) > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                      ${Math.max(0, Number(editForm.finalTotal) - Number(editForm.amountPaid || 0)).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* NOTAS */}
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase text-foreground">Notas u Observaciones</Label>
+                <Textarea
+                  placeholder="Motivo de la corrección o notas de la venta..."
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                  className="h-16 text-xs rounded-xl resize-none"
+                />
+              </div>
+
+              {/* BOTONES DE ACCIÓN */}
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setEditingSale(null)}
+                  className="flex-1 font-bold h-10 rounded-xl uppercase text-xs"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={handleSaveEdit}
+                  disabled={updateSaleMutation.isPending}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-10 rounded-xl shadow-lg uppercase text-xs flex items-center justify-center gap-1.5"
+                >
+                  <Save className="h-4 w-4" />
+                  {updateSaleMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
