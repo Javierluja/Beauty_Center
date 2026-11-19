@@ -24,6 +24,7 @@ import {
   Wallet,
   ShieldCheck,
   Settings,
+  ReceiptText,
 } from "lucide-react";
 import { useState, type ReactNode, useEffect } from "react";
 import { useLocation, useNavigate, Link, Navigate } from "react-router";
@@ -35,6 +36,7 @@ const menuItems = [
   { icon: CalendarDays,    label: "Agenda",     path: "/agenda", permKey: "agenda" },
   { icon: Bell,           label: "Avisos",      path: "/notificaciones", permKey: "avisos" },
   { icon: ShoppingCart,   label: "Ventas",      path: "/ventas", permKey: "ventas" },
+  { icon: ReceiptText,    label: "Cierre de Caja", path: "/cierre-caja", permKey: "ventas" },
   { icon: ShoppingBag,    label: "Compras",     path: "/compras", permKey: "compras" },
   { icon: Sparkles,       label: "Sesiones",    path: "/sesiones", permKey: "sesiones" },
   { icon: Package,        label: "Productos",   path: "/productos", permKey: "productos" },

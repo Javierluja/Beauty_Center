@@ -10,6 +10,8 @@ import {
   updateSaleStatus,
   updateSaleAbono,
   updateSale,
+  deleteSale,
+  getCierreCajaData,
   findSaleItems,
 } from "./queries/sales.js";
 import { getDailySummary } from "./queries/expenses.js"; // Importación verificada
@@ -244,6 +246,46 @@ export const saleRouter = createRouter({
   getItems: authedQuery
     .input(z.number())
     .query(({ input }) => findSaleItems(input)),
+
+  delete: adminQuery
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const sale = await findSaleById(input.id);
+      const res = await deleteSale(input.id);
+
+      // Webhook a Google Sheets notificando la eliminación
+      try {
+        fetch("https://script.google.com/macros/s/AKfycbz_Xa916OIVWUyKwhpM4K73vntd0kaxgtuGuOG8fTdkkwg9mHAzLM9yLbhDU1i5z9c_Dg/exec", {
+          method: "POST",
+          body: JSON.stringify({
+            tipo: "venta_eliminada",
+            id: input.id,
+            cliente: sale?.clientName || "Cliente General",
+            total: sale?.finalTotal || "0",
+            metodo: sale?.paymentMethod || "Desconocido",
+            eliminadoPor: ctx.user.name,
+            fecha: new Date().toLocaleString('es-ES')
+          })
+        }).catch(err => console.error("[Webhook Error]:", err));
+      } catch (e) {
+        console.error("[Webhook Error] Could not send data to Google Sheets", e);
+      }
+
+      return res;
+    }),
+
+  cierreCaja: authedQuery
+    .input(
+      z.object({
+        dateFrom: z.date().or(z.string().transform((val) => new Date(val))),
+        dateTo: z.date().or(z.string().transform((val) => new Date(val))),
+      })
+    )
+    .query(({ input }) => {
+      const from = input.dateFrom instanceof Date ? input.dateFrom : new Date(input.dateFrom);
+      const to = input.dateTo instanceof Date ? input.dateTo : new Date(input.dateTo);
+      return getCierreCajaData(from, to);
+    }),
 });
 
 

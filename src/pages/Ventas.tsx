@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router";
 import { trpc } from "@/providers/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Search,
   ShoppingCart,
   Minus,
@@ -41,14 +52,17 @@ import {
   ShieldCheck,
   Save,
   Calendar,
+  ReceiptText,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const PAYMENT_METHODS = [
-  { id: "contado", label: "Contado", icon: Banknote },
+  { id: "contado", label: "Contado / Efectivo", icon: Banknote },
   { id: "transferencia", label: "Transferencia", icon: Smartphone },
-  { id: "credito", label: "Crédito", icon: CreditCard },
   { id: "transbank", label: "Transbank", icon: CreditCard },
+  { id: "credito", label: "Crédito", icon: CreditCard },
+  { id: "cortesia", label: "Cortesía", icon: Sparkles },
+  { id: "merma", label: "Merma", icon: Trash2 },
   { id: "gift_card", label: "Gift Card", icon: Gift },
 ];
 
@@ -155,6 +169,30 @@ export default function Ventas() {
     onError: (err) => {
       toast({
         title: "Error al actualizar venta",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const [saleToDelete, setSaleToDelete] = useState<any | null>(null);
+
+  const deleteSaleMutation = trpc.sale.delete.useMutation({
+    onSuccess: () => {
+      utils.sale.list.invalidate();
+      utils.product.list.invalidate();
+      utils.customers.list.invalidate();
+      toast({
+        title: "¡Venta eliminada con éxito! 🗑️",
+        description: `La venta #${saleToDelete?.id} ha sido eliminada y el stock fue restaurado.`,
+      });
+      setSaleToDelete(null);
+      setViewingSaleId(null);
+      setEditingSale(null);
+    },
+    onError: (err) => {
+      toast({
+        title: "Error al eliminar venta",
         description: err.message,
         variant: "destructive",
       });
@@ -373,6 +411,12 @@ export default function Ventas() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black text-foreground tracking-tight">Punto de Venta</h1>
+        <Link to="/cierre-caja">
+          <Button variant="outline" className="h-9 px-3 rounded-xl border-teal-600/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950 font-bold text-xs uppercase flex items-center gap-2 shadow-sm">
+            <ReceiptText className="h-4 w-4 text-teal-600" />
+            Cierre de Caja
+          </Button>
+        </Link>
       </div>
 
       <Tabs defaultValue="caja" className="w-full h-full flex flex-col">
@@ -751,17 +795,23 @@ export default function Ventas() {
                         <p className="font-black text-primary text-xl tracking-tighter">${Number(sale.finalTotal).toLocaleString()}</p>
                       </div>
                       {canEditSales && (
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenEdit(sale);
-                            }}
+                            onClick={() => handleOpenEdit(sale)}
                             className="h-8 px-2.5 rounded-lg border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground font-bold text-xs uppercase flex items-center gap-1 shadow-sm shrink-0"
                           >
                             <Pencil className="h-3.5 w-3.5" /> Modificar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSaleToDelete(sale)}
+                            className="h-8 w-8 p-0 rounded-lg border-red-200 text-red-600 hover:bg-red-600 hover:text-white dark:border-red-900/40 dark:text-red-400 font-bold text-xs flex items-center justify-center shadow-sm shrink-0"
+                            title="Eliminar venta"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       )}
@@ -849,25 +899,37 @@ export default function Ventas() {
                   <span>${Number(viewingSale.finalTotal).toLocaleString()}</span>
                 </div>
                 
-                <div className="flex gap-2 w-full pt-1">
+                <div className="flex flex-wrap gap-2 w-full pt-1">
                   {canEditSales && (
-                    <Button 
-                      onClick={() => {
-                        const s = salesHistory?.find(sale => sale.id === viewingSaleId);
-                        setViewingSaleId(null);
-                        if (s) handleOpenEdit(s);
-                      }} 
-                      className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 rounded-xl shadow-lg uppercase text-xs flex items-center justify-center gap-1.5"
-                    >
-                      <Pencil className="h-4 w-4" /> Modificar Venta
-                    </Button>
+                    <>
+                      <Button 
+                        onClick={() => {
+                          const s = salesHistory?.find(sale => sale.id === viewingSaleId);
+                          setViewingSaleId(null);
+                          if (s) handleOpenEdit(s);
+                        }} 
+                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 rounded-xl shadow-lg uppercase text-xs flex items-center justify-center gap-1.5"
+                      >
+                        <Pencil className="h-4 w-4" /> Modificar
+                      </Button>
+                      <Button 
+                        variant="destructive"
+                        onClick={() => {
+                          const s = salesHistory?.find(sale => sale.id === viewingSaleId);
+                          if (s) setSaleToDelete(s);
+                        }} 
+                        className="font-bold h-11 px-3.5 rounded-xl shadow-lg uppercase text-xs flex items-center justify-center gap-1.5"
+                      >
+                        <Trash2 className="h-4 w-4" /> Eliminar
+                      </Button>
+                    </>
                   )}
                   <Button 
                     variant="outline" 
                     onClick={() => setViewingSaleId(null)} 
-                    className={`${canEditSales ? 'flex-1' : 'w-full'} font-bold h-11 rounded-xl uppercase text-xs`}
+                    className={`${canEditSales ? 'w-auto' : 'w-full'} font-bold h-11 px-4 rounded-xl uppercase text-xs`}
                   >
-                    Cerrar Detalle
+                    Cerrar
                   </Button>
                 </div>
               </div>
@@ -1079,6 +1141,19 @@ export default function Ventas() {
               <div className="flex gap-2 pt-2">
                 <Button 
                   type="button" 
+                  variant="destructive" 
+                  onClick={() => {
+                    const s = editingSale;
+                    setEditingSale(null);
+                    setSaleToDelete(s);
+                  }}
+                  className="font-bold h-10 px-3 rounded-xl uppercase text-xs flex items-center justify-center gap-1.5"
+                  title="Eliminar esta venta definitivamente"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+                <Button 
+                  type="button" 
                   variant="outline" 
                   onClick={() => setEditingSale(null)}
                   className="flex-1 font-bold h-10 rounded-xl uppercase text-xs"
@@ -1099,6 +1174,50 @@ export default function Ventas() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* DIÁLOGO DE CONFIRMACIÓN PARA ELIMINAR VENTA */}
+      <AlertDialog open={!!saleToDelete} onOpenChange={(open) => !open && setSaleToDelete(null)}>
+        <AlertDialogContent className="max-w-md rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-black text-destructive flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" /> ¿Eliminar esta venta definitivamente?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed pt-2">
+              Esta acción no se puede deshacer. Se eliminará la venta{" "}
+              <span className="font-bold text-foreground">#{saleToDelete?.id}</span> por un total de{" "}
+              <span className="font-bold text-foreground">
+                ${Number(saleToDelete?.finalTotal || 0).toLocaleString()}
+              </span>{" "}
+              asociada a{" "}
+              <span className="font-bold text-foreground">
+                {saleToDelete?.clientName || "Cliente General"}
+              </span>.
+              <br /><br />
+              <span className="font-semibold text-foreground">Restauración de inventario:</span> Los
+              productos físicos incluidos en la venta se sumarán de nuevo al stock automáticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 gap-2">
+            <AlertDialogCancel
+              className="font-bold rounded-xl text-xs uppercase"
+              disabled={deleteSaleMutation.isPending}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (saleToDelete) {
+                  deleteSaleMutation.mutate({ id: saleToDelete.id });
+                }
+              }}
+              disabled={deleteSaleMutation.isPending}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold rounded-xl text-xs uppercase"
+            >
+              {deleteSaleMutation.isPending ? "Eliminando..." : "Sí, Eliminar Venta"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

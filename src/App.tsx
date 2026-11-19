@@ -17,6 +17,7 @@ import Cuentas from "./pages/Cuentas";
 import Sesiones from "./pages/Sesiones";
 import Ajustes from "./pages/Ajustes";
 import Compras from "./pages/Compras";
+import CierreCaja from "./pages/CierreCaja";
 
 export default function App() {
   useEffect(() => {
@@ -53,6 +54,14 @@ export default function App() {
         element={
           <AuthLayout>
             <Ventas />
+          </AuthLayout>
+        }
+      />
+      <Route
+        path="/cierre-caja"
+        element={
+          <AuthLayout>
+            <CierreCaja />
           </AuthLayout>
         }
       />
